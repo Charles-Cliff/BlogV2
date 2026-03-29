@@ -28,6 +28,12 @@ import type { Favicon } from "../types/config";
 import { url, pathsEqual } from "../utils/url-utils";
 import "katex/dist/katex.css";
 
+// 随机选择背景图
+const bgSrc = siteConfig.background.src;
+const randomBgSrc = Array.isArray(bgSrc) 
+	? bgSrc[Math.floor(Math.random() * bgSrc.length)] 
+	: bgSrc;
+
 interface Props {
 	title?: string;
 	banner?: string;
@@ -180,30 +186,30 @@ const bannerOffset =
 			const bgUrl = getComputedStyle(document.documentElement).getPropertyValue('--bg-url').trim();
 			const bgEnable = getComputedStyle(document.documentElement).getPropertyValue('--bg-enable').trim();
 			
-			console.log('[BG Debug] URL:', bgUrl, 'Enable:', bgEnable);
+			//console.log('[BG Debug] URL:', bgUrl, 'Enable:', bgEnable);
 			
 			if (bgUrl && bgUrl !== 'none' && bgEnable === '1') {
 				const urlMatch = bgUrl.match(/url\(["']?([^"')]+)["']?\)/);
-				console.log('[BG Debug] URL Match:', urlMatch);
+				//console.log('[BG Debug] URL Match:', urlMatch);
 				
 				if (urlMatch) {
 					let imageUrl = urlMatch[1];
-					console.log('[BG Debug] Loading:', imageUrl);
+					//console.log('[BG Debug] Loading:', imageUrl);
 					
 					const img = new Image();
 					// 注意：移除 crossOrigin 属性，CSS 背景图不需要 CORS
 					// img.crossOrigin = 'anonymous'; // 暂时禁用，简化调试
 					
 					img.onload = function() {
-						console.log('[BG Debug] Image loaded successfully');
+						//console.log('[BG Debug] Image loaded successfully');
 						document.body.classList.add('bg-loaded');
 						document.documentElement.style.setProperty('--card-bg', 'var(--card-bg-transparent)');
 						document.documentElement.style.setProperty('--float-panel-bg', 'var(--float-panel-bg-transparent)');
 					};
 					
 					img.onerror = function(e) {
-						// 加载失败时直接显示背景（暂时禁用备用图床，等待 CORS 修复验证后再启用）
-						console.warn('[BG Debug] Image load failed, showing anyway:', e);
+						// 加载失败时直接显示背景
+						//console.warn('[BG Debug] Image load failed, showing anyway:', e);
 						document.body.classList.add('bg-loaded');
 					};
 					
@@ -212,7 +218,7 @@ const bannerOffset =
 					// 超时保护:5秒后强制显示
 					setTimeout(function() {
 						if (!document.body.classList.contains('bg-loaded')) {
-							console.warn('[BG Debug] Timeout, forcing display');
+							//console.warn('[BG Debug] Timeout, forcing display');
 							document.body.classList.add('bg-loaded');
 						}
 					}, 5000);
@@ -222,7 +228,7 @@ const bannerOffset =
 		<style define:vars={{
 			configHue,
 			'page-width': `${PAGE_WIDTH}rem`,
-			'bg-url': siteConfig.background.src ? `url(${siteConfig.background.src})` : 'none',
+			'bg-url': randomBgSrc ? `url(${randomBgSrc})` : 'none',
 			'bg-enable': siteConfig.background.enable ? '1' : '0',
 			'bg-position': siteConfig.background.position || 'center',
 			'bg-size': siteConfig.background.size || 'cover',

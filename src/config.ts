@@ -37,7 +37,12 @@ export const siteConfig: SiteConfig = {
 	},
 	background: {
 		enable: true, // Enable background image
-		src: "/images/bgs/Castle01.webp", // 本地背景图
+		src: [ // 背景图数组，页面加载时随机选择一张
+			"/images/bgs/Asuna01.png",
+			"/images/bgs/Castle01.webp",
+			"/images/bgs/KA.png",
+			"/images/bgs/KA2.png",
+		],
 		position: "center", // Background position: 'top', 'center', 'bottom'
 		size: "cover", // Background size: 'cover', 'contain', 'auto'
 		repeat: "no-repeat", // Background repeat: 'no-repeat', 'repeat', 'repeat-x', 'repeat-y'

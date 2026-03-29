@@ -32,7 +32,7 @@ export type SiteConfig = {
 	};
 	background: {
 		enable: boolean;
-		src: string;
+		src: string | string[]; // 单张图片或图片数组（随机选择）
 		position?: "top" | "center" | "bottom";
 		size?: "cover" | "contain" | "auto";
 		repeat?: "no-repeat" | "repeat" | "repeat-x" | "repeat-y";
