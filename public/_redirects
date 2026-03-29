@@ -1,0 +1,16 @@
+# Cloudflare Pages redirects/proxying rules
+# Format: [source] [destination] [status?]
+# - 301/302/etc = redirect
+# - 200 = proxy (rewrite without changing URL)
+
+# Rewrites (proxy)
+/sitemap.xml /sitemap-index.xml 200
+
+# Redirects (keep order; static before dynamic)
+/posts/%E6%88%91%E7%9A%84%E7%AC%AC%E4%B8%80%E7%AF%87%E5%8D%9A%E5%AE%A2/ / 301
+/posts/%E6%88%91%E7%9A%84%E7%AC%AC%E4%B8%80%E7%AF%87%E5%8D%9A%E5%AE%A2 / 301
+/posts/%E3%80%90%E5%A4%87%E9%80%89%E7%94%A8%E4%B8%8D%E4%B8%BA%E5%AE%9E%E9%99%85%E5%87%BA%E7%8E%B0%E3%80%91 / 301
+/posts/vercel%E9%83%A8%E7%BD%B2%E6%8C%87%E5%8D%97/ / 301
+/posts/vercel%E9%83%A8%E7%BD%B2%E6%8C%87%E5%8D%97 / 301
+/606 https://lizard-parcel-a96.notion.site/2685723cc6b580da93ded9f42eeb8d08?pvs=74 301
+/608 https://cloudrunmax.top/s/QpcO/608 301
