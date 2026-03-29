@@ -180,22 +180,22 @@ const bannerOffset =
 			const bgUrl = getComputedStyle(document.documentElement).getPropertyValue('--bg-url').trim();
 			const bgEnable = getComputedStyle(document.documentElement).getPropertyValue('--bg-enable').trim();
 			
-			//console.log('[BG Debug] URL:', bgUrl, 'Enable:', bgEnable);
+			console.log('[BG Debug] URL:', bgUrl, 'Enable:', bgEnable);
 			
 			if (bgUrl && bgUrl !== 'none' && bgEnable === '1') {
 				const urlMatch = bgUrl.match(/url\(["']?([^"')]+)["']?\)/);
-				//console.log('[BG Debug] URL Match:', urlMatch);
+				console.log('[BG Debug] URL Match:', urlMatch);
 				
 				if (urlMatch) {
 					let imageUrl = urlMatch[1];
-					//console.log('[BG Debug] Loading:', imageUrl);
+					console.log('[BG Debug] Loading:', imageUrl);
 					
 					const img = new Image();
 					// 注意：移除 crossOrigin 属性，CSS 背景图不需要 CORS
 					// img.crossOrigin = 'anonymous'; // 暂时禁用，简化调试
 					
 					img.onload = function() {
-						//console.log('[BG Debug] Image loaded successfully');
+						console.log('[BG Debug] Image loaded successfully');
 						document.body.classList.add('bg-loaded');
 						document.documentElement.style.setProperty('--card-bg', 'var(--card-bg-transparent)');
 						document.documentElement.style.setProperty('--float-panel-bg', 'var(--float-panel-bg-transparent)');
