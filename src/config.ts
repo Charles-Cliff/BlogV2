@@ -58,20 +58,6 @@ export const siteConfig: SiteConfig = {
 	],
 	apps: [
 		{
-			name: "私人云盘",
-			url: "https://cloudrunmax.top/",
-			image: "/favicon/cloudreve.webp",
-			description: "内容管理入口",
-			external: true,
-		},
-		{
-			name: "私人图床",
-			url: "https://image.cloudrunmax.top/",
-			image: "/favicon/imagebed.webp",
-			description: "利用CloudflareR2搭建的私人图床",
-			external: true,
-		},
-		{
 			name: "提示词优化",
 			url: "https://prompt.micostar.cc",
 			image: "/favicon/prompts.webp",
@@ -94,7 +80,7 @@ export const navBarConfig: NavBarConfig = {
 export const profileConfig: ProfileConfig = {
 	avatar: "/images/avatar.webp", // Relative to the /src directory. Relative to the /public directory if it starts with '/'
 	name: "皓月与六便士",
-	bio: ["追月者不问归途"],
+	bio: ["追月者不问归途,要一起吗"],
 	links: [
 		{
 			name: "Bilibli",
@@ -130,14 +116,14 @@ export const umamiConfig: UmamiConfig = {
 };
 
 // 防盗链/域名保护配置
-export const antiLeechConfig: AntiLeechConfig = {
-	enable: true,
-	officialSites: [{ url: "https://gzhblog.cn/", name: "主站" }],
-	debug: false,
-	warningTitle: "⚠️ 域名安全警告",
-	warningMessage:
-		"您可能正在访问非官方网站，存在安全风险！建议跳转到官方网站。",
-};
+// export const antiLeechConfig: AntiLeechConfig = {
+// 	enable: true,
+// 	officialSites: [{ url: "https://gzhblog.cn/", name: "主站" }],
+// 	debug: false,
+// 	warningTitle: "⚠️ 域名安全警告",
+// 	warningMessage:
+// 		"您可能正在访问非官方网站，存在安全风险！建议跳转到官方网站。",
+// };
 
 export const googleAnalyticsConfig = {
 	enable: true,
