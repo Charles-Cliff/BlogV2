@@ -14,7 +14,7 @@
 **SEO/Search Indexing:**
 - IndexNow API
   - Endpoint: https://api.indexnow.org/IndexNow
-  - Host: www.micostar.cc
+  - Host: www.gzhblog.cn
   - Key: 4ff84931e3084c36bcc43c09ec05df75
   - Implementation: `src/pages/api/indexnow.ts` and `src/pages/api/webhook/indexnow.ts`
   - Scripts: `scripts/submit-indexnow.mjs`, `scripts/submit-indexnow-incremental.mjs`

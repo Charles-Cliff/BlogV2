@@ -2,7 +2,7 @@
 
 import { profileConfig } from "../config";
 import { url } from "../utils/url-utils";
-const startYear = 2024;
+const startYear = 2026;
 const buildYear = new Date().getFullYear();
 ---
 
@@ -22,6 +22,7 @@ const buildYear = new Date().getFullYear();
         由
         <a class="transition link text-[var(--primary)] font-medium" target="_blank" href="https://astro.build">Astro</a> 和
         <a class="transition link text-[var(--primary)] font-medium" target="_blank" href="https://github.com/saicaca/fuwari">Fuwari</a> 强力驱动
+        <a class="transition link text-[var(--primary)] font-medium" target="_blank" href="https://github.com/Charles-Cliff/BlogV2">已开源</a>
         <br>
         <!-- 如果有备案号，取消下面两行的注释并修改号码 -->
         <!--
@@ -37,7 +38,7 @@ const buildYear = new Date().getFullYear();
     (function () {
         const el = document.getElementById('copyright-year');
         if (!el) return;
-        const startYear = 2024;
+        const startYear = 2026;
         const nowYear = new Date().getFullYear();
         el.textContent = nowYear > startYear ? `${startYear} - ${nowYear}` : String(startYear);
     })();

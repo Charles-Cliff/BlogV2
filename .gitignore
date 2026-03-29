@@ -37,3 +37,6 @@ ori
 
 # Claude 配置文件夹
 .claude
+
+.vercel
+.env*.local

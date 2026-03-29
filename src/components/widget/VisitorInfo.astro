@@ -70,22 +70,6 @@ const style = Astro.props.style;
             <img id="cdn-node" class="cdn-logo" alt="Detecting..." />
         </div>
     </div>
-
-    <!-- IP 纯净度检测区域 -->
-    <div class="ip-purity-section">
-        <button id="ip-purity-btn" class="purity-check-btn">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/>
-                <path d="m9 12 2 2 4-4"/>
-            </svg>
-            <span>查看 IP 信息卡</span>
-        </button>
-        <div id="ip-purity-result" class="purity-result hidden">
-            <a href="https://ippure.com" target="_blank" rel="noopener noreferrer" class="ippure-card-link">
-                <img id="ippure-card-img" data-src="https://my.ippure.com/v1/card" alt="IP信息卡片" class="ippure-card-img" />
-            </a>
-        </div>
-    </div>
 </WidgetLayout>
 
 <style>
@@ -157,61 +141,6 @@ const style = Astro.props.style;
     }
     .cdn-logo:hover {
         transform: scale(1.05);
-    }
-
-    /* IP 纯净度检测区域 */
-    .ip-purity-section {
-        margin-top: 0.75rem;
-        padding-top: 0.75rem;
-        border-top: 1px dashed rgba(255, 255, 255, 0.15);
-    }
-    .purity-check-btn {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.5rem;
-        width: 100%;
-        padding: 0.5rem 1rem;
-        border: 1px solid rgba(255, 255, 255, 0.15);
-        border-radius: 8px;
-        background: rgba(255, 255, 255, 0.08);
-        color: rgba(255, 255, 255, 0.8);
-        font-size: 0.8rem;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.2s ease;
-    }
-    .purity-check-btn:hover {
-        background: rgba(255, 255, 255, 0.15);
-        border-color: rgba(255, 255, 255, 0.25);
-        color: rgba(255, 255, 255, 0.95);
-    }
-    .purity-check-btn.expanded {
-        border-radius: 8px 8px 0 0;
-        border-bottom: none;
-    }
-    .purity-check-btn.loading {
-        pointer-events: none;
-        opacity: 0.7;
-    }
-    .purity-result {
-        overflow: hidden;
-        border: 1px solid rgba(255, 255, 255, 0.15);
-        border-top: none;
-        border-radius: 0 0 8px 8px;
-        background: rgba(255, 255, 255, 0.05);
-    }
-    .purity-result.hidden {
-        display: none;
-    }
-    .ippure-card-link {
-        display: block;
-    }
-    .ippure-card-img {
-        width: 100%;
-        height: auto;
-        display: block;
-        border-radius: 0 0 6px 6px;
     }
 </style>
 
@@ -487,58 +416,5 @@ const style = Astro.props.style;
     };
 
     fetchIpInfo();
-
-    // IP 信息卡片切换显示
-    const setupPurityCheck = () => {
-        const btn = document.getElementById('ip-purity-btn') as HTMLButtonElement | null;
-        const resultDiv = document.getElementById('ip-purity-result');
-        const cardImg = document.getElementById('ippure-card-img') as HTMLImageElement | null;
-        if (!btn || !resultDiv || !cardImg) return;
-
-        const baseSrc = cardImg.dataset.src || 'https://my.ippure.com/v1/card';
-        let isExpanded = false;
-
-        // 图片加载完成事件
-        cardImg.addEventListener('load', () => {
-            btn.classList.remove('loading');
-            const btnSpan = btn.querySelector('span');
-            if (btnSpan && isExpanded) btnSpan.textContent = '收起 IP 信息卡';
-        });
-
-        // 图片加载失败事件
-        cardImg.addEventListener('error', () => {
-            btn.classList.remove('loading');
-            const btnSpan = btn.querySelector('span');
-            if (btnSpan) btnSpan.textContent = '加载失败，点击重试';
-            isExpanded = false;
-            resultDiv.classList.add('hidden');
-            btn.classList.remove('expanded');
-        });
-
-        btn.addEventListener('click', () => {
-            if (btn.classList.contains('loading')) return; // 加载中禁止点击
-            
-            isExpanded = !isExpanded;
-            
-            if (isExpanded) {
-                // 显示加载状态
-                btn.classList.add('loading');
-                const btnSpan = btn.querySelector('span');
-                if (btnSpan) btnSpan.textContent = '查询中...';
-                
-                // 每次展开时加载新图片（添加时间戳防止缓存）
-                cardImg.src = `${baseSrc}?t=${Date.now()}`;
-                resultDiv.classList.remove('hidden');
-                btn.classList.add('expanded');
-            } else {
-                resultDiv.classList.add('hidden');
-                btn.classList.remove('expanded');
-                const btnSpan = btn.querySelector('span');
-                if (btnSpan) btnSpan.textContent = '查看 IP 信息卡';
-            }
-        });
-    };
-
-    setupPurityCheck();
   });
 </script>

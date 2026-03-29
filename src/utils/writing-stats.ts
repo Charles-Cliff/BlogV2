@@ -8,6 +8,8 @@ type StatsData = {
 	postsByYear: { year: number; count: number }[];
 	popularPosts: { title: string; slug: string; views: number }[];
 	longestPosts: { title: string; slug: string; words: number }[];
+	unityPosts: { title: string; slug: string; published: Date }[];
+	unrealPosts: { title: string; slug: string; published: Date }[];
 	allPostViews: { slug: string; views: number }[];
 };
 
@@ -24,6 +26,7 @@ export async function getWritingStats(): Promise<StatsData> {
 		words: rendered[i].remarkPluginFrontmatter?.words || rendered[i].remarkPluginFrontmatter?.totalCharCount || 0,
 		minutes: rendered[i].remarkPluginFrontmatter?.minutes || 0,
 		year: new Date(p.data.published).getUTCFullYear(),
+		tags: p.data.tags || [],
 	}));
 
 	const totalPosts = postsWithWords.length;
@@ -50,8 +53,28 @@ export async function getWritingStats(): Promise<StatsData> {
 			.map(({ slug, views }) => ({ title: slugMap.get(slug)!, slug, views }));
 	} catch {}
 
-	const longestPosts = [...postsWithWords].sort((a, b) => b.words - a.words).slice(0, 5);
+	// Unity相关文章（按发布时间排序，最新的在前）
+	const unityPosts = allPosts
+		.filter(p => (p.data.tags || []).some((t: string) => t.toLowerCase().includes('unity')))
+		.map(p => ({
+			title: p.data.title,
+			slug: p.slug,
+			published: p.data.published,
+		}))
+		.sort((a, b) => new Date(b.published).getTime() - new Date(a.published).getTime())
+		.slice(0, 5);
 
-	cached = { totalPosts, totalWords, totalMinutes, avgWords, postsByYear, popularPosts, longestPosts, allPostViews };
+	// Unreal相关文章（按发布时间排序，最新的在前）
+	const unrealPosts = allPosts
+		.filter(p => (p.data.tags || []).some((t: string) => t.toLowerCase().includes('unreal')))
+		.map(p => ({
+			title: p.data.title,
+			slug: p.slug,
+			published: p.data.published,
+		}))
+		.sort((a, b) => new Date(b.published).getTime() - new Date(a.published).getTime())
+		.slice(0, 5);
+
+	cached = { totalPosts, totalWords, totalMinutes, avgWords, postsByYear, popularPosts, unityPosts, unrealPosts, allPostViews };
 	return cached;
 }

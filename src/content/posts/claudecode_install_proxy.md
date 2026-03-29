@@ -1,7 +1,7 @@
 ---
 title: ClaudeCode下载代理(Worker)
 published: 2026-02-24T23:15:08
-updated: 2026-02-25T00:53:46
+updated: 2026-03-30T02:15:18
 description: '通过 Cloudflare Worker 搭建 Claude Code 安装代理，解决国内无法直接下载的问题'
 image: '/images/ClaudeCode1.webp'
 tags: [Cloudflare, ClaudeCode, 中转]
@@ -11,7 +11,7 @@ lang: ''
 ---
 # 1. Claude Code 是什么？
 
-简单来讲，Claude Code 就是一款 **AI 智能编程工具**，具有强大的 Vibe Coding 能力，详细介绍请看 [Claude Code 使用笔记](https://www.micostar.cc/posts/claudecode/)。
+简单来讲，Claude Code 就是一款 **AI 智能编程工具**，具有强大的 Vibe Coding 能力，详细介绍请看 [Claude Code 使用笔记](https://www.gzhblog.cn/posts/claudecode/)。
 
 # 2. 入门安装
 

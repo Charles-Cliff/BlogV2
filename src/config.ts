@@ -11,8 +11,8 @@ import type {
 import { LinkPreset } from "./types/config";
 
 export const siteConfig: SiteConfig = {
-	title: "Betsy Blog",
-	subtitle: "分享网络技术、服务器部署、Unity开发、AI技术应用与原理",
+	title: "Cliff Blog",
+	subtitle: "分享网络技术、服务器部署、Unity 开发、AI 技术应用与原理",
 	description:
 		"分享网络技术、服务器部署、UE开发、Unity开发、AI技术应用与原理、作者为流转星(Betsy)",
 
@@ -51,19 +51,12 @@ export const siteConfig: SiteConfig = {
 	favicon: [
 		// Leave this array empty to use the default favicon
 		{
-			src: "https://image.cloudrunmax.top/file/CF/1756734381495_58fc963052f0a5cd8ce123b8d10c4a53.jpg", // Path of the favicon, relative to the /public directory
+			src: "/images/Castle00.png", // 使用城堡图片作为网站图标
 			//   theme: 'light',              // (Optional) Either 'light' or 'dark', set only if you have different favicons for light and dark mode
 			//   sizes: '32x32',              // (Optional) Size of the favicon, set only if you have favicons of different sizes
 		},
 	],
 	apps: [
-		{
-			name: "私人AI网站",
-			url: "https://ai0728.com.cn/",
-			image: "/favicon/openwebui.webp",
-			description: "智能对话与创作助手",
-			external: true,
-		},
 		{
 			name: "私人云盘",
 			url: "https://cloudrunmax.top/",
@@ -76,20 +69,6 @@ export const siteConfig: SiteConfig = {
 			url: "https://image.cloudrunmax.top/",
 			image: "/favicon/imagebed.webp",
 			description: "利用CloudflareR2搭建的私人图床",
-			external: true,
-		},
-		{
-			name: "私人AI绘图",
-			url: "https://aiimage.cloudrunmax.top/",
-			image: "/favicon/aiimage.webp",
-			description: "利用CloudflareWorker搭建的私人AI绘图",
-			external: true,
-		},
-		{
-			name: "私人AI提示词",
-			url: "https://aiprompt.ai0728.com.cn/",
-			image: "/favicon/aiprompt.webp",
-			description: "个人研究的较棒AI提示词集合",
 			external: true,
 		},
 		{
@@ -109,16 +88,13 @@ export const navBarConfig: NavBarConfig = {
 		LinkPreset.Friends,
 		LinkPreset.Apps,
 		LinkPreset.Donate,
-		LinkPreset.Stats,
-		LinkPreset.Status,
-		LinkPreset.Monitor,
 	],
 };
 
 export const profileConfig: ProfileConfig = {
 	avatar: "/images/avatar.webp", // Relative to the /src directory. Relative to the /public directory if it starts with '/'
 	name: "皓月与六便士",
-	bio: ["追月者不问归途。"],
+	bio: ["追月者不问归途"],
 	links: [
 		{
 			name: "Bilibli",
@@ -139,24 +115,24 @@ export const licenseConfig: LicenseConfig = {
 	url: "https://creativecommons.org/licenses/by-nc-sa/4.0/",
 };
 
-//图片回退
+// 图片回退配置（如果没有外部图床，可以禁用）
 export const imageFallbackConfig: ImageFallbackConfig = {
-	enable: true,
-	originalDomain: "img.micostar.cc", // 主力图床 (新项目)
-	fallbackDomain: "image.cloudrunmax.top", // R2 备用图床 (旧项目)
+	enable: false,  // 禁用回退，使用本地图片
+	originalDomain: "img.micostar.cc",
+	fallbackDomain: "image.cloudrunmax.top",
 };
 
 export const umamiConfig: UmamiConfig = {
 	enable: true,
-	baseUrl: "https://umami.micostar.cc",
-	shareId: "X9ZZZ5l2xErS44Rc",
+	baseUrl: "https://cloud.umami.is",
+	shareId: "",
 	timezone: "Asia/Shanghai",
 };
 
 // 防盗链/域名保护配置
 export const antiLeechConfig: AntiLeechConfig = {
 	enable: true,
-	officialSites: [{ url: "https://www.micostar.cc", name: "主站" }],
+	officialSites: [{ url: "https://gzhblog.cn/", name: "主站" }],
 	debug: false,
 	warningTitle: "⚠️ 域名安全警告",
 	warningMessage:

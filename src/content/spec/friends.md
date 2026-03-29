@@ -11,11 +11,11 @@
 
 ```json
 {
-  "name": "Betsy Blog",
+  "name": "Cliff Blog",
   "avatar": "https://img.micostar.cc/images/avatar.webp",
   "introduction": "爱我所爱，我们是彼此永远的动力",
-  "url": "https://www.micostar.cc",
-  "friendsPage": "https://www.micostar.cc/friends"
+  "url": "https://www.gzhblog.cn",
+  "friendsPage": "https://www.gzhblog.cn/friends"
 }
 ```
 
