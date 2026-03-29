@@ -6,19 +6,35 @@ let isPlaying = false;
 let currentTime = 0;
 let duration = 0;
 let isLoaded = false;
-let isInitialized = false; // 是否已初始化音频
-let isLoading = false; // 是否正在加载
+let isInitialized = false;
+let isLoading = false;
 let checkboxElement: HTMLInputElement;
-let isMobile = false; // 是否移动端视口
-let pendingPlayRequest = false; // 移动端首点加载后自动播放
-let showLoadingToast = false; // 控制加载提示显示
-let showLoadedToast = false; // 控制加载完成提示显示
-let loadStartTime = 0; // 记录加载开始时间
+let isMobile = false;
+let pendingPlayRequest = false;
+let showLoadingToast = false;
+let showLoadedToast = false;
+let loadStartTime = 0;
+let currentTrackIndex = 0;
+let currentTrackName = "";
 
-// 音频文件配置 - 支持多格式回退
-const audioSources = ["/music/background.flac", "/music/background.mp3"];
+// 音乐播放列表 - 在这里添加你的音乐文件
+const playlist = [
+	{ name: "ユメセカイ", src: "/music/background.mp3" },
+	// 添加更多音乐：
+	{ name: "think tenderly of you", src: "/music/think tenderly of you.flac" },
+	{ name: "a tender feeling", src: "/music/a tender feeling.flac" },
+];
 
-let currentSourceIndex = 0;
+function shuffleArray<T>(array: T[]): T[] {
+	const shuffled = [...array];
+	for (let i = shuffled.length - 1; i > 0; i--) {
+		const j = Math.floor(Math.random() * (i + 1));
+		[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+	}
+	return shuffled;
+}
+
+let shuffledPlaylist = shuffleArray(playlist);
 
 function updateIsMobile() {
 	if (typeof window !== "undefined") {
@@ -33,25 +49,20 @@ onMount(() => {
 	}
 
 	audio = new Audio();
-	// 懒加载：不立即加载音频文件
 
 	audio.addEventListener("loadedmetadata", () => {
 		duration = audio.duration;
 		isLoaded = true;
 		isLoading = false;
 
-		// 确保至少显示1秒加载提示，然后显示完成提示
 		const minLoadTime = Math.max(1000 - (Date.now() - loadStartTime), 100);
 		setTimeout(() => {
 			showLoadingToast = false;
-			// 显示加载完成提示
 			showLoadedToast = true;
-			// 1秒后隐藏完成提示
 			setTimeout(() => {
 				showLoadedToast = false;
 			}, 1000);
 
-			// 移动端：用户首点后自动播放
 			if (pendingPlayRequest && isMobile) {
 				pendingPlayRequest = false;
 				isPlaying = true;
@@ -74,10 +85,7 @@ onMount(() => {
 	});
 
 	audio.addEventListener("ended", () => {
-		isPlaying = false;
-		if (checkboxElement) {
-			checkboxElement.checked = false;
-		}
+		playNextTrack();
 	});
 
 	audio.addEventListener("error", handleAudioError);
@@ -93,31 +101,53 @@ onMount(() => {
 	};
 });
 
-function loadAudioSource() {
-	if (currentSourceIndex < audioSources.length) {
+function loadCurrentTrack() {
+	if (currentTrackIndex < shuffledPlaylist.length) {
+		const track = shuffledPlaylist[currentTrackIndex];
+		currentTrackName = track.name;
 		isLoading = true;
-		showLoadingToast = true; // 显示加载提示
-		loadStartTime = Date.now(); // 记录开始时间
-		audio.src = audioSources[currentSourceIndex];
+		showLoadingToast = true;
+		loadStartTime = Date.now();
+		audio.src = track.src;
 		audio.load();
 		isInitialized = true;
+		console.log(`[Music] Loading track ${currentTrackIndex + 1}/${shuffledPlaylist.length}: ${track.name}`);
+	}
+}
+
+function playNextTrack() {
+	currentTrackIndex++;
+	if (currentTrackIndex >= shuffledPlaylist.length) {
+		// 重新随机打乱并从头开始
+		shuffledPlaylist = shuffleArray(playlist);
+		currentTrackIndex = 0;
+		console.log("[Music] Playlist reshuffled");
+	}
+	
+	if (isPlaying) {
+		loadCurrentTrack();
+		audio.play().catch((error) => {
+			console.error("Failed to play next track:", error);
+		});
+	} else {
+		loadCurrentTrack();
 	}
 }
 
 function handleAudioError() {
-	console.warn(
-		`Failed to load audio source: ${audioSources[currentSourceIndex]}`,
-	);
-	currentSourceIndex++;
-	if (currentSourceIndex < audioSources.length) {
-		loadAudioSource();
+	const track = shuffledPlaylist[currentTrackIndex];
+	console.warn(`Failed to load audio: ${track.src}`);
+	
+	// 尝试下一首
+	currentTrackIndex++;
+	if (currentTrackIndex < shuffledPlaylist.length) {
+		loadCurrentTrack();
 	} else {
-		console.error("All audio sources failed to load");
+		console.error("All tracks failed to load");
 		isLoading = false;
 		showLoadingToast = false;
 		showLoadedToast = false;
 		pendingPlayRequest = false;
-		// 所有音频源都加载失败时重置checkbox
 		if (checkboxElement) {
 			checkboxElement.checked = false;
 		}
@@ -127,11 +157,9 @@ function handleAudioError() {
 function handleCheckboxChange(event: Event) {
 	const target = event.target as HTMLInputElement;
 
-	// 如果音频尚未初始化，先初始化
 	if (!isInitialized) {
-		loadAudioSource();
+		loadCurrentTrack();
 
-		// 如果正在加载，移动端记下自动播放意图，桌面端阻止状态变化
 		if (isLoading) {
 			pendingPlayRequest = isMobile;
 			if (!isMobile) {
@@ -142,12 +170,10 @@ function handleCheckboxChange(event: Event) {
 	}
 
 	if (!isLoaded) {
-		// 如果音频未加载完成，阻止checkbox状态改变
 		target.checked = false;
 		return;
 	}
 
-	// 如果显示加载完成提示，立即隐藏
 	if (showLoadedToast) {
 		showLoadedToast = false;
 	}
@@ -157,7 +183,6 @@ function handleCheckboxChange(event: Event) {
 	if (isPlaying) {
 		audio.play().catch((error) => {
 			console.error("Failed to play audio:", error);
-			// 播放失败时重置checkbox
 			if (checkboxElement) {
 				checkboxElement.checked = false;
 			}
@@ -184,7 +209,6 @@ function handleCheckboxChange(event: Event) {
   </label>
 </div>
 
-<!-- 优雅的音乐加载提示 -->
 {#if showLoadingToast}
   <div class="music-loading-notification loading">
     <div class="loading-content">
@@ -201,14 +225,13 @@ function handleCheckboxChange(event: Event) {
       </div>
       <div class="loading-text">
         <span class="main-text loading-main-text">🎵 音乐准备中</span>
-        <span class="sub-text">正在加载音频文件...</span>
+        <span class="sub-text">{currentTrackName || '正在加载...'}</span>
       </div>
     </div>
     <div class="loading-progress"></div>
   </div>
 {/if}
 
-<!-- 音乐加载完成提示 -->
 {#if showLoadedToast}
   <div class="music-loading-notification loaded">
     <div class="loading-content">
@@ -224,7 +247,7 @@ function handleCheckboxChange(event: Event) {
       </div>
       <div class="loading-text">
         <span class="main-text success-main-text">✨ 音乐已就绪</span>
-        <span class="sub-text">点击播放按钮开始播放</span>
+        <span class="sub-text">{currentTrackName}</span>
       </div>
     </div>
     <div class="success-glow"></div>
@@ -278,11 +301,9 @@ function handleCheckboxChange(event: Event) {
       transform: rotate(0);
       background: conic-gradient(var(--primary), transparent 20%);
     }
-
     80% {
       background: conic-gradient(var(--primary), transparent 90%);
     }
-
     100% {
       transform: rotate(360deg);
       background: conic-gradient(var(--primary), var(--primary));
@@ -345,16 +366,10 @@ function handleCheckboxChange(event: Event) {
   }
 
   @keyframes reveal {
-    0% {
-      width: 0;
-    }
-
-    100% {
-      width: 35%;
-    }
+    0% { width: 0; }
+    100% { width: 35%; }
   }
 
-  /* 优雅的音乐加载提示样式 */
   .music-loading-notification {
     position: fixed;
     top: 12px;
@@ -458,6 +473,10 @@ function handleCheckboxChange(event: Event) {
     font-size: 12px;
     color: var(--btn-content);
     opacity: 0.8;
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .loading-progress {
@@ -497,13 +516,8 @@ function handleCheckboxChange(event: Event) {
     animation: rippleEffect 1.5s ease-out infinite;
   }
 
-  .ripple-2 {
-    animation-delay: 0.3s;
-  }
-
-  .ripple-3 {
-    animation-delay: 0.6s;
-  }
+  .ripple-2 { animation-delay: 0.3s; }
+  .ripple-3 { animation-delay: 0.6s; }
 
   .success-glow {
     height: 3px;
@@ -525,114 +539,51 @@ function handleCheckboxChange(event: Event) {
   }
 
   @keyframes musicNotificationSlideUp {
-    from {
-      transform: translateY(100%) scale(0.9);
-      opacity: 0;
-    }
-    to {
-      transform: translateY(0) scale(1);
-      opacity: 1;
-    }
+    from { transform: translateY(100%) scale(0.9); opacity: 0; }
+    to { transform: translateY(0) scale(1); opacity: 1; }
   }
 
   @keyframes musicPulse {
-    0%, 100% { 
-      transform: scale(1);
-      box-shadow: 0 0 0 0 rgba(var(--primary-rgb, 112, 78, 199), 0.4);
-    }
-    50% { 
-      transform: scale(1.05);
-      box-shadow: 0 0 0 8px rgba(var(--primary-rgb, 112, 78, 199), 0);
-    }
+    0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(var(--primary-rgb, 112, 78, 199), 0.4); }
+    50% { transform: scale(1.05); box-shadow: 0 0 0 8px rgba(var(--primary-rgb, 112, 78, 199), 0); }
   }
 
   @keyframes musicWave {
-    0%, 40%, 100% { 
-      height: 8px; 
-      opacity: 0.6;
-    }
-    20% { 
-      height: 20px; 
-      opacity: 1;
-    }
+    0%, 40%, 100% { height: 8px; opacity: 0.6; }
+    20% { height: 20px; opacity: 1; }
   }
 
   @keyframes progressSlide {
-    0% {
-      left: -100%;
-    }
-    100% {
-      left: 100%;
-    }
+    0% { left: -100%; }
+    100% { left: 100%; }
   }
 
   @keyframes textPulse {
-    0%, 100% { 
-      opacity: 1;
-      transform: scale(1);
-    }
-    50% { 
-      opacity: 0.8;
-      transform: scale(1.02);
-    }
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.8; transform: scale(1.02); }
   }
 
   @keyframes successBounce {
-    0% {
-      transform: scale(0.3);
-      opacity: 0;
-    }
-    50% {
-      transform: scale(1.1);
-    }
-    70% {
-      transform: scale(0.9);
-    }
-    100% {
-      transform: scale(1);
-      opacity: 1;
-    }
+    0% { transform: scale(0.3); opacity: 0; }
+    50% { transform: scale(1.1); }
+    70% { transform: scale(0.9); }
+    100% { transform: scale(1); opacity: 1; }
   }
 
   @keyframes rippleEffect {
-    0% {
-      transform: scale(0.8);
-      opacity: 0.8;
-    }
-    100% {
-      transform: scale(2.5);
-      opacity: 0;
-    }
+    0% { transform: scale(0.8); opacity: 0.8; }
+    100% { transform: scale(2.5); opacity: 0; }
   }
 
   @keyframes successGlow {
-    0% {
-      left: -100%;
-      opacity: 0;
-    }
-    50% {
-      opacity: 1;
-    }
-    100% {
-      left: 100%;
-      opacity: 0;
-    }
+    0% { left: -100%; opacity: 0; }
+    50% { opacity: 1; }
+    100% { left: 100%; opacity: 0; }
   }
 
-  /* 响应式设计 */
   @media (max-width: 768px) {
-    .container {
-      width: 36px;
-      height: 36px;
-    }
-    
-    .play-icon,
-    .pause-icon {
-      width: 11px;
-      height: 11px;
-    }
-
-    /* 移动端：通知底部居中，避免与汉堡面板重叠或被裁剪 */
+    .container { width: 36px; height: 36px; }
+    .play-icon, .pause-icon { width: 11px; height: 11px; }
     .music-loading-notification {
       position: fixed;
       top: auto;
@@ -647,38 +598,13 @@ function handleCheckboxChange(event: Event) {
       z-index: 11000;
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
       border-radius: var(--radius-large);
-    }
-
-    /* 移动端取消弹窗通知显示 */
-    .music-loading-notification {
       display: none;
     }
-
-    .loading-content {
-      padding: 12px 14px 10px 14px;
-      gap: 10px;
-    }
-
-    .music-icon {
-      width: 28px;
-      height: 28px;
-    }
-
-    .music-icon svg {
-      width: 14px;
-      height: 14px;
-    }
-
-    .loading-wave {
-      display: none;
-    }
-
-    .main-text {
-      font-size: 13px;
-    }
-
-    .sub-text {
-      font-size: 10px;
-    }
+    .loading-content { padding: 12px 14px 10px 14px; gap: 10px; }
+    .music-icon { width: 28px; height: 28px; }
+    .music-icon svg { width: 14px; height: 14px; }
+    .loading-wave { display: none; }
+    .main-text { font-size: 13px; }
+    .sub-text { font-size: 10px; }
   }
 </style>
