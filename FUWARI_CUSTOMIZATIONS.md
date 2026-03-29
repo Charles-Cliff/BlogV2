@@ -6,9 +6,9 @@
 | 功能模块 | 文件路径 | 代码位置/修改说明 |
 | :--- | :--- | :--- |
 | **全站基础信息** | `src/config.ts` | 🌟 **核心文件** (第 13-120 行)。修改 `siteConfig` (标题、作者)、`profileConfig` (头像、Bio)、`navBarConfig` (导航链接) 等。 |
-| **Umami 统计代码** | `src/layouts/Layout.astro` | ⚠️ **硬编码** (约第 322 行)。搜索 `umami.micostar.cc`，替换为您自己的 Umami 脚本 URL 和 `data-website-id`。 |
+| **Umami 统计代码** | `src/layouts/Layout.astro` | ⚠️ **硬编码** (约第 322 行)。搜索 `umami.gzhblog.cn`，替换为您自己的 Umami 脚本 URL 和 `data-website-id`。 |
 | **背景图设置** | `src/config.ts` | `siteConfig.background.src` (约第 39 行)。当前配置为随机图 API (`img.micostar.cc/random`)，可改为静态图片 URL。 |
-| **页脚 (Footer)** | `src/components/Footer.astro` | (约第 15-31 行) 修改 ICP备案号 (`鲁ICP备...`)、公网安备号、版权年份 (`startYear`) 以及 "Powered by" 链接。 |
+| **页脚 (Footer)** | `src/components/Footer.astro` | (约第 15-31 行) 修改 ICP备案号、公网安备号、版权年份 (`startYear`) 以及 "Powered by" 链接。 |
 | **访客信息卡片** | `src/components/widget/VisitorInfo.astro` | ⚠️ **硬编码** (约第 220-300 行)。包含经纬度 `BLOGGER_LAT/LON` 设置。**CDN 检测逻辑**位于 `checkCDN` 函数中 (通过 Header 判断)。CDN 图标资源位于 `public/cdn/` (支持 Cloudflare/EdgeOne/Vercel)，可在此处修改判断规则或添加新 CDN。 |
 | **友情链接数据** | `src/content/friends/*.json` | 在 `src/content/friends/` 目录下添加/修改 `.json` 文件。必需字段：`name`、`url`、`avatar`、`introduction`、`friendsPage`。排序由 `_order.json` 控制。首页说明文案在 `src/content/spec/friends.md`。 |
 | **友链自动合并** | `.github/workflows/friends-auto-merge.yml` | PR 自动验证（JSON 校验 + 互链检测）并合并。新友链自动追加到 `_order.json`。`_order.json` 禁止外部 PR 修改。 |
@@ -43,12 +43,12 @@
 ```typescript
 export const antiLeechConfig: AntiLeechConfig = {
     enable: true,
-    officialSites: [{ url: "https://www.micostar.cc", name: "主站" }],  // ← 修改此处
+    officialSites: [{ url: "https://www.gzhblog.cn", name: "主站" }],  // ← 修改此处
     // ...
 };
 ```
 
-将 `www.micostar.cc` 替换为您自己的域名。
+将 `www.gzhblog.cn` 替换为您自己的域名。
 
 ---
 
@@ -58,18 +58,19 @@ Layout 中有 **两处使用 Base64 加密的域名验证代码**，用于防止
 
 | 位置 | 代码特征 | 当前值 |
 |-----|---------|-------|
-| 约第 364 行 | `v:['d3d3Lm1pY29zdGFyLmNj']` | `www.micostar.cc` 的 Base64 编码 |
-| 约第 500 行 | `v:['d3d3Lm1pY29zdGFyLmNj']` | 同上 |
+| 约第 356 行 | `v:['d3d3Lmd6aGJsb2cuY24=']` | `www.gzhblog.cn` 的 Base64 编码 |
+| 约第 553 行 | `v:['d3d3Lmd6aGJsb2cuY24=']` | 同上 |
 
 #### 修改步骤
 
-1. 在 `Layout.astro` 中搜索 `d3d3Lm1pY29zdGFyLmNj`
+1. 在 `Layout.astro` 中搜索 `d3d3Lmd6aGJsb2cuY24=`
 2. 将两处都替换为您生成的新 Base64 编码值（域名编码而来）
 
 #### 常见域名的 Base64 对照表
 
 | 域名 | Base64 编码 |
 |-----|------------|
+| `www.gzhblog.cn` | `d3d3Lmd6aGJsb2cuY24=` |
 | `www.micostar.cc` | `d3d3Lm1pY29zdGFyLmNj` |
 | `www.example.com` | `d3d3LmV4YW1wbGUuY29t` |
 | `blog.example.com` | `YmxvZy5leGFtcGxlLmNvbQ==` |

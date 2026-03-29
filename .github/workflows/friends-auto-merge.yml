@@ -11,7 +11,7 @@ permissions:
 jobs:
   auto-merge:
     runs-on: ubuntu-latest
-    if: github.repository_owner == 'Besty0728'
+    if: github.repository_owner == 'Charles-Cliff'
     steps:
       - name: Checkout Base (safe context)
         uses: actions/checkout@v4
@@ -134,10 +134,10 @@ jobs:
             NAME=$(python3 -c "import json,sys;print(json.load(open(sys.argv[1]))['name'])" "$file")
             HTTP_CODE=$(curl -s -o /tmp/page.html -w "%{http_code}" -L --max-time 15 "$FRIENDS_PAGE" 2>/dev/null || echo "000")
             if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 400 ]; then
-              if grep -qi 'href="[^"]*www\.micostar\.cc[^"]*"' /tmp/page.html; then
+              if grep -qi 'href="[^"]*www\.gzhblog\.cn[^"]*"' /tmp/page.html; then
                 RESULT="${RESULT}${NAME}: ✅ 已添加互链\n"
               else
-                RESULT="${RESULT}${NAME}: ❌ 未检测到 www.micostar.cc 的链接\n"
+                RESULT="${RESULT}${NAME}: ❌ 未检测到 www.gzhblog.cn 的链接\n"
                 STATUS="fail"
               fi
             else
@@ -167,26 +167,22 @@ jobs:
             echo "status=fail" >> $GITHUB_OUTPUT
           fi
 
-      - name: Install pnpm
-        if: steps.gate.outputs.status == 'pass'
-        uses: pnpm/action-setup@v4
-
       - name: Set up Node.js
         if: steps.gate.outputs.status == 'pass'
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: "pnpm"
+          cache: "npm"
 
       - name: Install dependencies
         if: steps.gate.outputs.status == 'pass'
-        run: pnpm install --frozen-lockfile
+        run: npm install
 
       - name: Build Check
         id: build
         if: steps.gate.outputs.status == 'pass'
         run: |
-          if pnpm build; then
+          if npm run build; then
             echo "status=pass" >> $GITHUB_OUTPUT
           else
             echo "status=fail" >> $GITHUB_OUTPUT
