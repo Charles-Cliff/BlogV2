@@ -1,6 +1,7 @@
 ---
 title: UE5 Mass集群系统详解 — 大规模人群模拟解决方案
 published: 2026-03-30T12:31:00
+updated: 2026-03-30T15:33:16
 description: 深入解析Unreal Engine 5的Mass集群系统，从架构设计到实战应用，帮你快速掌握大规模人群模拟技术
 image: ""
 tags:
@@ -35,7 +36,6 @@ Mass是UE5内置�?*大规模实体模拟框�?*，核心特点是�?
 
 简单来说：Mass让你能渲�?*数万个同时运行的AI单位**，而且帧率稳定�?
 ---
-![Mass集群流程图](/images/2026-03/Pasted-image-20260330140548.png)
 ## Mass核心概念
 
 ### 1. Entity（实体）

@@ -200,4 +200,40 @@ top-20 left-4 md:left-[unset] right-4 shadow-2xl rounded-2xl p-2">
     max-height: calc(100vh - 100px);
     overflow-y: auto;
   }
+  
+  .search-panel::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .search-panel::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 3px;
+  }
+  
+  .search-panel::-webkit-scrollbar-thumb {
+    background: oklch(0.6342 0.2854 314.26 / 0.3);
+    border-radius: 3px;
+    transition: background 0.2s ease;
+  }
+  
+  .search-panel::-webkit-scrollbar-thumb:hover {
+    background: oklch(0.6342 0.2854 314.26 / 0.5);
+  }
+  
+  :global(.dark) .search-panel::-webkit-scrollbar-thumb {
+    background: oklch(0.6342 0.2854 314.26 / 0.4);
+  }
+  
+  :global(.dark) .search-panel::-webkit-scrollbar-thumb:hover {
+    background: oklch(0.6342 0.2854 314.26 / 0.6);
+  }
+  
+  .search-panel {
+    scrollbar-width: thin;
+    scrollbar-color: oklch(0.6342 0.2854 314.26 / 0.3) transparent;
+  }
+  
+  :global(.dark) .search-panel {
+    scrollbar-color: oklch(0.6342 0.2854 314.26 / 0.4) transparent;
+  }
 </style>
