@@ -1,239 +1,5 @@
-/* eslint-disable react/no-unknown-property */
-import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { useMemo, useRef, useEffect, useState } from 'react';
-import * as THREE from 'three';
-
-const colorsDark = [
-	"#38bdf8", // Sky
-	"#22d3ee", // Cyan
-	"#ffffff", // White
-];
-const colorsLight = [
-	"#0284c7", // Sky 600
-	"#0369a1", // Sky 700
-	"#505050", // Grey
-];
-
-const AntigravityInner = ({
-  count = 280, // Adjusted to 280
-  magnetRadius = 10,
-  ringRadius = 10,
-  waveSpeed = 0.4,
-  waveAmplitude = 1,
-  particleSize = 1.8, // Adjusted to 1.8
-  lerpSpeed = 0.1,
-  autoAnimate = false,
-  particleVariance = 1,
-  rotationSpeed = 0,
-  depthFactor = 1,
-  pulseSpeed = 3,
-  particleShape = 'capsule',
-  fieldStrength = 10,
-  isDarkMode = false // Passed prop
-}) => {
-  const meshRef = useRef<THREE.InstancedMesh>(null);
-  const { viewport } = useThree();
-  const dummy = useMemo(() => new THREE.Object3D(), []);
-  const colorArray = useMemo(() => new Float32Array(count * 3), [count]);
-
-  const lastMousePos = useRef({ x: 0, y: 0 });
-  const lastMouseMoveTime = useRef(0);
-  const virtualMouse = useRef({ x: 0, y: 0 });
-
-  const particles = useMemo(() => {
-    const temp = [];
-    const width = viewport.width || 100;
-    const height = viewport.height || 100;
-    const palette = isDarkMode ? colorsDark : colorsLight;
-    const tempColor = new THREE.Color();
-
-    for (let i = 0; i < count; i++) {
-        // ... existing random generation ...
-      const t = Math.random() * 100;
-      const factor = 20 + Math.random() * 100;
-      const speed = 0.01 + Math.random() / 200;
-      const xFactor = -50 + Math.random() * 100;
-      const yFactor = -50 + Math.random() * 100;
-      const zFactor = -50 + Math.random() * 100;
-
-      const x = (Math.random() - 0.5) * width;
-      const y = (Math.random() - 0.5) * height;
-      const z = (Math.random() - 0.5) * 20;
-
-      const randomRadiusOffset = (Math.random() - 0.5) * 2;
-      
-      // Color assignment
-      const colorHex = palette[Math.floor(Math.random() * palette.length)];
-      tempColor.set(colorHex);
-      tempColor.toArray(colorArray, i * 3);
-
-      temp.push({
-        t,
-        factor,
-        speed,
-        xFactor,
-        yFactor,
-        zFactor,
-        mx: x,
-        my: y,
-        mz: z,
-        cx: x,
-        cy: y,
-        cz: z,
-        vx: 0,
-        vy: 0,
-        vz: 0,
-        randomRadiusOffset
-      });
-    }
-    return temp;
-  }, [count, viewport.width, viewport.height, isDarkMode]); // Re-calc on dark mode change
-
-  // ... useEffect for mouse tracking (kept same) ...
-  useEffect(() => {
-    const handleMove = (x: number, y: number) => {
-      // Normalize to -1 to 1 based on window size
-      const nx = (x / window.innerWidth) * 2 - 1;
-      const ny = -(y / window.innerHeight) * 2 + 1;
-      
-      lastMouseMoveTime.current = Date.now();
-      lastMousePos.current = { x: nx, y: ny };
-    };
-
-    const onMouseMove = (e: MouseEvent) => handleMove(e.clientX, e.clientY);
-    const onTouchMove = (e: TouchEvent) => {
-        if(e.touches.length > 0) {
-            handleMove(e.touches[0].clientX, e.touches[0].clientY);
-        }
-    };
-
-    window.addEventListener('mousemove', onMouseMove);
-    window.addEventListener('touchmove', onTouchMove, { passive: true });
-    window.addEventListener('touchstart', onTouchMove, { passive: true });
-
-    return () => {
-      window.removeEventListener('mousemove', onMouseMove);
-      window.removeEventListener('touchmove', onTouchMove);
-      window.removeEventListener('touchstart', onTouchMove);
-    };
-  }, []);
-
-  useFrame((state) => {
-    const mesh = meshRef.current;
-    if (!mesh) return;
-
-    // Update color attribute if changed
-    if (mesh.geometry.attributes.color) {
-        mesh.geometry.attributes.color.needsUpdate = true;
-    }
-
-    const { viewport: v } = state;
-
-    // Use the tracked global mouse position instead of state.pointer
-    const m = lastMousePos.current;
-
-    let destX = (m.x * v.width) / 2;
-    let destY = (m.y * v.height) / 2;
-
-    if (autoAnimate && Date.now() - lastMouseMoveTime.current > 2000) {
-      const time = state.clock.getElapsedTime();
-      destX = Math.sin(time * 0.5) * (v.width / 4);
-      destY = Math.cos(time * 0.5 * 2) * (v.height / 4);
-    }
-
-    const smoothFactor = 0.05;
-    virtualMouse.current.x += (destX - virtualMouse.current.x) * smoothFactor;
-    virtualMouse.current.y += (destY - virtualMouse.current.y) * smoothFactor;
-
-    const targetX = virtualMouse.current.x;
-    const targetY = virtualMouse.current.y;
-
-    const globalRotation = state.clock.getElapsedTime() * rotationSpeed;
-
-    particles.forEach((particle, i) => {
-      let { t, speed, mx, my, mz, cz, randomRadiusOffset } = particle;
-
-      t = particle.t += speed / 2;
-
-      const projectionFactor = 1 - cz / 50;
-      const projectedTargetX = targetX * projectionFactor;
-      const projectedTargetY = targetY * projectionFactor;
-
-      const dx = mx - projectedTargetX;
-      const dy = my - projectedTargetY;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-
-      let targetPos = { x: mx, y: my, z: mz * depthFactor };
-
-      if (dist < magnetRadius) {
-        const angle = Math.atan2(dy, dx) + globalRotation;
-        const moveDist = dist < magnetRadius * 0.6 ? magnetRadius : dist; 
-
-        // 60% inner radius is kept clear
-        if (moveDist === magnetRadius) {
-            const wave = Math.sin(t * waveSpeed + angle) * (0.5 * waveAmplitude);
-            const deviation = randomRadiusOffset * (5 / (fieldStrength + 0.1));
-            const currentRingRadius = ringRadius + wave + deviation;
-
-            targetPos.x = projectedTargetX + currentRingRadius * Math.cos(angle);
-            targetPos.y = projectedTargetY + currentRingRadius * Math.sin(angle);
-            targetPos.z = mz * depthFactor + Math.sin(t) * (1 * waveAmplitude * depthFactor);
-        } else {
-             // Outer 40% allows particles, but adds wave/pulse effect
-             targetPos.x = projectedTargetX + dist * Math.cos(angle - globalRotation); // keep original angle
-             targetPos.y = projectedTargetY + dist * Math.sin(angle - globalRotation);
-             // Add some Z movement to animate them
-             targetPos.z = mz * depthFactor + Math.sin(t * pulseSpeed) * (0.5 * waveAmplitude);
-        }
-      }
-
-      particle.cx += (targetPos.x - particle.cx) * lerpSpeed;
-      particle.cy += (targetPos.y - particle.cy) * lerpSpeed;
-      particle.cz += (targetPos.z - particle.cz) * lerpSpeed;
-
-      dummy.position.set(particle.cx, particle.cy, particle.cz);
-
-      dummy.lookAt(projectedTargetX, projectedTargetY, particle.cz);
-      dummy.rotateX(Math.PI / 2);
-
-      const currentDistToMouse = Math.sqrt(
-        Math.pow(particle.cx - projectedTargetX, 2) + Math.pow(particle.cy - projectedTargetY, 2)
-      );
-
-      const distFromRing = Math.abs(currentDistToMouse - ringRadius);
-      let scaleFactor = 1 - distFromRing / 10;
-
-      scaleFactor = Math.max(0, Math.min(1, scaleFactor));
-
-      const finalScale = scaleFactor * (0.8 + Math.sin(t * pulseSpeed) * 0.2 * particleVariance) * particleSize;
-      dummy.scale.set(finalScale, finalScale, finalScale);
-
-      dummy.updateMatrix();
-
-      mesh.setMatrixAt(i, dummy.matrix);
-    });
-
-    mesh.instanceMatrix.needsUpdate = true;
-  });
-
-  return (
-    <instancedMesh ref={meshRef} args={[undefined, undefined, count]}>
-      {particleShape === 'capsule' && <capsuleGeometry args={[0.1, 0.4, 4, 8]} >
-         <instancedBufferAttribute attach="attributes-color" args={[colorArray, 3]} />
-      </capsuleGeometry>}
-      {particleShape === 'sphere' && <sphereGeometry args={[0.2, 16, 16]} >
-         <instancedBufferAttribute attach="attributes-color" args={[colorArray, 3]} />
-      </sphereGeometry>}
-      {particleShape === 'box' && <boxGeometry args={[0.3, 0.3, 0.3]} >
-         <instancedBufferAttribute attach="attributes-color" args={[colorArray, 3]} />
-      </boxGeometry>}
-      {particleShape === 'tetrahedron' && <tetrahedronGeometry args={[0.3]} >
-         <instancedBufferAttribute attach="attributes-color" args={[colorArray, 3]} />
-      </tetrahedronGeometry>}
-      <meshBasicMaterial vertexColors toneMapped={false} />
-    </instancedMesh>
-  );
-};
+import { useRef, useEffect } from 'react';
+import { Application, Sprite, Texture, DisplacementFilter, Assets } from 'pixi.js';
 
 const BlurFollower = () => {
     const followerRef = useRef<HTMLDivElement>(null);
@@ -241,7 +7,7 @@ const BlurFollower = () => {
     useEffect(() => {
         const handleMouseMove = (e: MouseEvent) => {
             if (followerRef.current) {
-                const x = e.clientX - 300; // 300 is half of width/height
+                const x = e.clientX - 300;
                 const y = e.clientY - 300;
                 followerRef.current.style.transform = `translate3d(${x}px, ${y}px, 0)`;
             }
@@ -282,54 +48,267 @@ const BlurFollower = () => {
     );
 };
 
-const Antigravity = (props: any) => {
-    const [isDarkMode, setIsDarkMode] = useState(false);
-    const [particleCount, setParticleCount] = useState(100);
+const createRippleTexture = (): HTMLCanvasElement => {
+    const size = 512;
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d')!;
+    const center = size / 2;
+    const maxRadius = center;
+    
+    ctx.fillStyle = 'rgb(128, 128, 128)';
+    ctx.fillRect(0, 0, size, size);
+    
+    const rings = 10;
+    const ringWidth = maxRadius * 0.85 / rings;
+    const fadeStart = maxRadius * 0.8;
+    
+    for (let ring = 0; ring < rings; ring++) {
+        const innerR = ring * ringWidth;
+        const outerR = (ring + 1) * ringWidth;
+        
+        if (outerR > fadeStart) continue;
+        
+        const gradient = ctx.createRadialGradient(center, center, innerR, center, center, outerR);
+        
+        const waveIntensity = 1 - (ring / rings) * 0.4;
+        
+        if (ring % 2 === 0) {
+            const val = Math.round(128 + 40 * waveIntensity);
+            gradient.addColorStop(0, `rgb(${val}, ${val}, ${val})`);
+            gradient.addColorStop(0.5, `rgb(${val + 20}, ${val + 20}, ${val + 20})`);
+            gradient.addColorStop(1, `rgb(${val}, ${val}, ${val})`);
+        } else {
+            const val = Math.round(128 - 40 * waveIntensity);
+            gradient.addColorStop(0, `rgb(${val}, ${val}, ${val})`);
+            gradient.addColorStop(0.5, `rgb(${val - 20}, ${val - 20}, ${val - 20})`);
+            gradient.addColorStop(1, `rgb(${val}, ${val}, ${val})`);
+        }
+        
+        ctx.beginPath();
+        ctx.arc(center, center, outerR, 0, Math.PI * 2);
+        ctx.arc(center, center, innerR, 0, Math.PI * 2, true);
+        ctx.fillStyle = gradient;
+        ctx.fill();
+    }
+    
+    const fadeGradient = ctx.createRadialGradient(
+        center, center, fadeStart,
+        center, center, maxRadius
+    );
+    fadeGradient.addColorStop(0, 'rgba(128, 128, 128, 0)');
+    fadeGradient.addColorStop(0.6, 'rgba(128, 128, 128, 0.8)');
+    fadeGradient.addColorStop(1, 'rgba(128, 128, 128, 1)');
+    
+    ctx.beginPath();
+    ctx.arc(center, center, maxRadius, 0, Math.PI * 2);
+    ctx.arc(center, center, fadeStart, 0, Math.PI * 2, true);
+    ctx.fillStyle = fadeGradient;
+    ctx.fill();
+    
+    return canvas;
+};
+
+interface Ripple {
+    x: number;
+    y: number;
+    startTime: number;
+    duration: number;
+    maxRadius: number;
+}
+
+const easeOutCubic = (t: number): number => 1 - Math.pow(1 - t, 3);
+
+const WaterRippleEffect = () => {
+    const containerRef = useRef<HTMLDivElement>(null);
+    const appRef = useRef<Application | null>(null);
+    const bgSpriteRef = useRef<Sprite | null>(null);
+    const dispSpriteRef = useRef<Sprite | null>(null);
+    const ripplesRef = useRef<Ripple[]>([]);
+    const initRef = useRef(false);
 
     useEffect(() => {
-        const checkDarkMode = () => {
-            setIsDarkMode(document.documentElement.classList.contains('dark'));
+        if (!containerRef.current || initRef.current) return;
+
+        const init = async () => {
+            try {
+                const bgStyle = getComputedStyle(document.documentElement).getPropertyValue('--bg-url');
+                const match = bgStyle.match(/url\(['"]?([^'")\s]+)['"]?\)/);
+                const bgUrl = match?.[1];
+                
+                if (!bgUrl) return;
+
+                const app = new Application();
+                
+                await app.init({
+                    width: window.innerWidth,
+                    height: window.innerHeight,
+                    backgroundAlpha: 0,
+                    antialias: true,
+                    resolution: window.devicePixelRatio || 1,
+                    autoDensity: true,
+                });
+
+                if (!containerRef.current) {
+                    app.destroy(true);
+                    return;
+                }
+
+                containerRef.current.appendChild(app.canvas);
+                appRef.current = app;
+                initRef.current = true;
+
+                const bgTexture = await Assets.load(bgUrl);
+                const bgSprite = new Sprite(bgTexture);
+                bgSprite.width = app.screen.width;
+                bgSprite.height = app.screen.height;
+                app.stage.addChild(bgSprite);
+                bgSpriteRef.current = bgSprite;
+
+                const rippleCanvas = createRippleTexture();
+                const rippleTexture = Texture.from(rippleCanvas);
+                
+                const dispSprite = new Sprite(rippleTexture);
+                dispSprite.anchor.set(0.5);
+                dispSprite.visible = false;
+                app.stage.addChild(dispSprite);
+                dispSpriteRef.current = dispSprite;
+
+                const filter = new DisplacementFilter(dispSprite);
+                filter.scale.set(0);
+                bgSprite.filters = [filter];
+
+                window.addEventListener('resize', () => {
+                    if (appRef.current && bgSpriteRef.current) {
+                        appRef.current.renderer.resize(window.innerWidth, window.innerHeight);
+                        bgSpriteRef.current.width = appRef.current.screen.width;
+                        bgSpriteRef.current.height = appRef.current.screen.height;
+                    }
+                });
+
+                app.ticker.add(() => {
+                    const now = Date.now();
+                    const ripples = ripplesRef.current;
+                    
+                    let totalScaleX = 0;
+                    let totalScaleY = 0;
+                    let count = 0;
+                    let latestRipple: Ripple | null = null;
+
+                    for (let i = ripples.length - 1; i >= 0; i--) {
+                        const r = ripples[i];
+                        const elapsed = now - r.startTime;
+                        const progress = elapsed / r.duration;
+
+                        if (progress >= 1) {
+                            ripples.splice(i, 1);
+                        } else {
+                            const easedProgress = easeOutCubic(progress);
+                            const strength = 45 * (1 - easedProgress);
+                            
+                            totalScaleX += strength;
+                            totalScaleY += strength;
+                            count++;
+                            latestRipple = r;
+                        }
+                    }
+
+                    if (count > 0 && latestRipple && dispSpriteRef.current && bgSpriteRef.current) {
+                        const elapsed = now - latestRipple.startTime;
+                        const progress = elapsed / latestRipple.duration;
+                        const easedProgress = easeOutCubic(progress);
+                        const radius = easedProgress * latestRipple.maxRadius;
+                        
+                        dispSpriteRef.current.position.set(latestRipple.x, latestRipple.y);
+                        dispSpriteRef.current.scale.set(radius / 256);
+                        dispSpriteRef.current.visible = true;
+                        
+                        const filter = bgSpriteRef.current.filters?.[0] as DisplacementFilter;
+                        if (filter) {
+                            filter.scale.set(totalScaleX / count);
+                        }
+                    } else if (dispSpriteRef.current && bgSpriteRef.current) {
+                        dispSpriteRef.current.visible = false;
+                        const filter = bgSpriteRef.current.filters?.[0] as DisplacementFilter;
+                        if (filter) filter.scale.set(0);
+                    }
+                });
+            } catch (err) {
+                console.error('[Ripple] Init error:', err);
+            }
+        };
+
+        const checkBg = () => {
+            if (document.body.classList.contains('bg-loaded')) {
+                setTimeout(init, 200);
+            } else {
+                setTimeout(checkBg, 100);
+            }
         };
         
-        checkDarkMode();
-        const observer = new MutationObserver(checkDarkMode);
-        observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+        checkBg();
 
-        return () => observer.disconnect();
+        return () => {
+            ripplesRef.current = [];
+            if (appRef.current) {
+                appRef.current.destroy(true);
+                appRef.current = null;
+            }
+            initRef.current = false;
+        };
     }, []);
 
     useEffect(() => {
-        const handleResize = () => {
-             if (window.innerWidth < 768) {
-                 setParticleCount(100);
-             } else {
-                 setParticleCount(280);
-             }
+        const createRipple = (x: number, y: number) => {
+            if (!appRef.current) return;
+
+            ripplesRef.current = [];
+
+            [
+                { delay: 0, radius: 300, duration: 2200 },
+                { delay: 0, radius: 380, duration: 2800 },
+                { delay: 0, radius: 460, duration: 3400 },
+            ].forEach(wave => {
+                ripplesRef.current.push({
+                    x, y,
+                    startTime: Date.now(),
+                    duration: wave.duration,
+                    maxRadius: wave.radius,
+                });
+            });
         };
 
-        handleResize(); // Check initial size
-        window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
+        const onClick = (e: MouseEvent) => createRipple(e.clientX, e.clientY);
+        const onTouch = (e: TouchEvent) => {
+            if (e.touches[0]) createRipple(e.touches[0].clientX, e.touches[0].clientY);
+        };
+
+        window.addEventListener('click', onClick);
+        window.addEventListener('touchstart', onTouch, { passive: true });
+
+        return () => {
+            window.removeEventListener('click', onClick);
+            window.removeEventListener('touchstart', onTouch);
+        };
     }, []);
 
-    const particleColor = isDarkMode ? '#38bdf8' : '#0284c7';
+    return <div ref={containerRef} className="absolute inset-0 pointer-events-none z-30" />;
+};
 
-  return (
-    <div className="fixed inset-0 z-[-1] overflow-hidden pointer-events-none">
-        <div className="absolute inset-0 z-10 w-full h-full">
-            <Canvas camera={{ position: [0, 0, 50], fov: 35 }}>
-                <AntigravityInner {...props} count={particleCount} isDarkMode={isDarkMode} />
-            </Canvas>
+const Antigravity = () => {
+    return (
+        <div className="fixed inset-0 z-[-1] overflow-hidden pointer-events-none">
+            <BlurFollower />
+            <WaterRippleEffect />
+            <div
+                className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05] pointer-events-none z-20"
+                style={{
+                    backgroundImage: `url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIj48ZmlsdGVyIGlkPSJhIiB4PSIwIiB5PSIwIj48ZmVUdXJidWxlbmNlIGJhc2VGcmVxdWVuY3k9Ii43NSIgc3RpdGNoVGlsZXM9InN0aXRjaCIgdHlwZT0iZnJhY3Rpb25hbE5vaXNlIi8+PGZlQ29sb3JNYXRyaXggdHlwZT0ic2F0dXJhdGUiIHZhbHVlcz0iMCIvPjwvZmlsdGVyPjxwYXRoIGQ9Ik0wIDBoMzAwdjMwMEgweiIgZmlsdGVyPSJ1cmwoI2EpIiBvcGFjaXR5PSIuMDUiLz48L3N2Zz4=')`
+                }}
+            />
         </div>
-        <BlurFollower />
-        <div
-             className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05] pointer-events-none z-20"
-             style={{
-                backgroundImage: `url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIj48ZmlsdGVyIGlkPSJhIiB4PSIwIiB5PSIwIj48ZmVUdXJidWxlbmNlIGJhc2VGcmVxdWVuY3k9Ii43NSIgc3RpdGNoVGlsZXM9InN0aXRjaCIgdHlwZT0iZnJhY3RhbE5vaXNlIi8+PGZlQ29sb3JNYXRyaXggdHlwZT0ic2F0dXJhdGUiIHZhbHVlcz0iMCIvPjwvZmlsdGVyPjxwYXRoIGQ9Ik0wIDBoMzAwdjMwMEgweiIgZmlsdGVyPSJ1cmwoI2EpIiBvcGFjaXR5PSIuMDUiLz48L3N2Zz4=')`
-             }}
-        ></div>
-    </div>
-  );
+    );
 };
 
 export default Antigravity;
