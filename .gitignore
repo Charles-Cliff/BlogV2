@@ -38,5 +38,13 @@ ori
 # Claude 配置文件夹
 .claude
 
+# Trae AI 工具配置
+.trae/
+
+# Obsidian 笔记配置
+.obsidian/
+
 .vercel
 .env*.local
+CLAUDE.md
+src/content/templater/
