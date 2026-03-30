@@ -11,10 +11,10 @@ import type {
 import { LinkPreset } from "./types/config";
 
 export const siteConfig: SiteConfig = {
-	title: "Cliff Blog",
-	subtitle: "分享网络技术、服务器部署、Unity 开发、AI 技术应用与原理",
+	title: "384400's Blog",
+	subtitle: "分享网络技术、UE开发、Unity 开发、AI 技术应用",
 	description:
-		"分享网络技术、服务器部署、UE开发、Unity开发、AI技术应用与原理、作者为流转星(Betsy)",
+		"分享网络技术、UE开发、Unity开发、AI技术应用、作者为384400",
 
 	keywords: [],
 	lang: "zh_CN", // 'en', 'zh_CN', 'zh_TW', 'ja', 'ko', 'es', 'th'
@@ -25,14 +25,14 @@ export const siteConfig: SiteConfig = {
 	},
 	banner: {
 		enable: false,
-		src: "/xinghui.avif", // Relative to the /src directory. Relative to the /public directory if it starts with '/'
+		src: "", // Relative to the /src directory. Relative to the /public directory if it starts with '/'
 
 		position: "center", // Equivalent to object-position, only supports 'top', 'center', 'bottom'. 'center' by default
 		credit: {
-			enable: true, // Display the credit text of the banner image
-			text: "Pixiv @chokei", // Credit text to be displayed
+			enable: false, // Display the credit text of the banner image
+			text: "", // Credit text to be displayed
 
-			url: "https://img.micostar.cc/random", // (Optional) URL link to the original artwork or artist's page
+			url: "", // (Optional) URL link to the original artwork or artist's page
 		},
 	},
 	background: {
@@ -109,15 +109,15 @@ export const licenseConfig: LicenseConfig = {
 // 图片回退配置（如果没有外部图床，可以禁用）
 export const imageFallbackConfig: ImageFallbackConfig = {
 	enable: false,  // 禁用回退，使用本地图片
-	originalDomain: "img.micostar.cc",
-	fallbackDomain: "image.cloudrunmax.top",
+	originalDomain: "",
+	fallbackDomain: "",
 };
 
 export const umamiConfig: UmamiConfig = {
 	enable: true,
-	baseUrl: "https://cloud.umami.is",
+	baseUrl: "",
 	shareId: "",
-	timezone: "Asia/Shanghai",
+	timezone: "",
 };
 
 // 防盗链/域名保护配置
