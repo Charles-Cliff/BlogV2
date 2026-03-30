@@ -1,17 +1,17 @@
 ---
 title: UE5 Gameplay Ability System (GAS) 完全指南
 published: 2026-03-30T17:59:00
-updated: 2026-03-30T17:59:00
-description: 深入解析Unreal Engine 5的Gameplay Ability System，从核心概念到实战应用，帮你快速掌握技能系统开发
-image: ''
+updated: 2026-03-30T18:34:15
+description: 深入解析Unreal Engines 5的Gameplay Ability System，从核心概念到实战应用，帮你快速掌握技能系统开发
+image: ""
 tags:
-  - Unreal Engine
+  - Unreal
   - GAS
   - Gameplay
   - 技能系统
   - ASC
 category: 技术教程
-lang: ''
+lang: ""
 pinned: false
 draft: false
 prerenderAll: true
@@ -402,4 +402,4 @@ GAS是UE5最强大的技能系统框架，核心组成：
 
 ---
 
-🎉 **恭喜！** 现在你已经掌握了UE5 GAS的核心概念。动手试试吧！
+
