@@ -38,16 +38,13 @@ export const siteConfig: SiteConfig = {
 	background: {
 		enable: true, // Enable background image
 		src: [ // 背景图数组，页面加载时随机选择一张
-			"/images/bgs/Asuna01.png",
-			"/images/bgs/Castle01.webp",
-			"/images/bgs/KA.png",
-			"/images/bgs/KA2.png",
+			"/images/bgs/KA.png"
 		],
 		position: "center", // Background position: 'top', 'center', 'bottom'
 		size: "cover", // Background size: 'cover', 'contain', 'auto'
 		repeat: "no-repeat", // Background repeat: 'no-repeat', 'repeat', 'repeat-x', 'repeat-y'
 		attachment: "fixed", // Background attachment: 'fixed', 'scroll', 'local'
-		opacity: 0.5, // Background opacity (0-1)
+		opacity: 0.9, // Background opacity (0-1)
 	},
 	toc: {
 		enable: true, // Display the table of contents on the right side of the post

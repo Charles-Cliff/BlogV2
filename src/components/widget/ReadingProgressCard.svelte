@@ -47,7 +47,7 @@ onDestroy(() => {
         >
             <div
                 class="h-full rounded-full transition-all duration-150 ease-out"
-                style="width: {progress}%; background: linear-gradient(90deg, oklch(0.70 0.14 var(--hue, 250)), oklch(0.60 0.16 var(--hue, 250)));"
+                style="width: {progress}%; background: oklch(0.6342 0.2854 314.26);"
             ></div>
         </div>
     </div>

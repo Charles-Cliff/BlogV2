@@ -1,7 +1,7 @@
 ---
 title: UE5 Mass集群系统详解 — 大规模人群模拟解决方案
 published: 2026-03-30T12:31:00
-updated: 2026-03-30T18:34:15
+updated: 2026-03-30T20:33:05
 description: 深入解析Unreal Engine 5的Mass集群系统，从架构设计到实战应用，帮你快速掌握大规模人群模拟技术
 image: ""
 tags:
@@ -16,8 +16,6 @@ lang: ""
 pinned: false
 prerenderAll: true
 ---
-
-# UE5 Mass集群系统详解 — 大规模人群模拟解决方案
 
 ## 前言
 
