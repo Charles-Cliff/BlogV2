@@ -1,97 +1,6 @@
 import { useRef, useEffect } from 'react';
 import { Application, Sprite, Texture, DisplacementFilter, Assets } from 'pixi.js';
 
-const BlurFollower = () => {
-    const followerRef = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        // Smooth lerp tracking
-        let mouseX = window.innerWidth / 2;
-        let mouseY = window.innerHeight / 2;
-        let currentX = mouseX;
-        let currentY = mouseY;
-        let rafId: number;
-
-        const handleMouseMove = (e: MouseEvent) => {
-            mouseX = e.clientX;
-            mouseY = e.clientY;
-        };
-
-        const handleTouchMove = (e: TouchEvent) => {
-            if (e.touches.length > 0) {
-                mouseX = e.touches[0].clientX;
-                mouseY = e.touches[0].clientY;
-            }
-        };
-
-        const animate = () => {
-            const lerp = 0.1;
-            currentX += (mouseX - currentX) * lerp;
-            currentY += (mouseY - currentY) * lerp;
-
-            if (followerRef.current) {
-                followerRef.current.style.transform = `translate3d(${currentX}px, ${currentY}px, 0)`;
-            }
-            rafId = requestAnimationFrame(animate);
-        };
-
-        window.addEventListener('mousemove', handleMouseMove);
-        window.addEventListener('touchmove', handleTouchMove, { passive: true });
-        window.addEventListener('touchstart', handleTouchMove, { passive: true });
-        rafId = requestAnimationFrame(animate);
-
-        return () => {
-            window.removeEventListener('mousemove', handleMouseMove);
-            window.removeEventListener('touchmove', handleTouchMove);
-            window.removeEventListener('touchstart', handleTouchMove);
-            cancelAnimationFrame(rafId);
-        };
-    }, []);
-
-    return (
-        <div
-            ref={followerRef}
-            className="blur-follower absolute top-0 left-0 pointer-events-none"
-            style={{
-                width: '1px',
-                height: '1px',
-                willChange: 'transform',
-            }}
-        >
-            {/* Core blur - transparent/gray */}
-            <div
-                className="absolute rounded-full"
-                style={{
-                    width: '400px',
-                    height: '400px',
-                    left: '-200px',
-                    top: '-200px',
-                    backdropFilter: 'blur(12px)',
-                    WebkitBackdropFilter: 'blur(12px)',
-                    maskImage: 'radial-gradient(closest-side, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) 30%, rgba(0,0,0,0) 70%)',
-                    WebkitMaskImage: 'radial-gradient(closest-side, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) 30%, rgba(0,0,0,0) 70%)',
-                    opacity: 0.5,
-                }}
-            />
-            {/* Outer softer blur */}
-            <div
-                className="absolute rounded-full"
-                style={{
-                    width: '600px',
-                    height: '600px',
-                    left: '-300px',
-                    top: '-300px',
-                    backdropFilter: 'blur(20px)',
-                    WebkitBackdropFilter: 'blur(20px)',
-                    maskImage: 'radial-gradient(closest-side, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.2) 40%, rgba(0,0,0,0) 70%)',
-                    WebkitMaskImage: 'radial-gradient(closest-side, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.2) 40%, rgba(0,0,0,0) 70%)',
-                    opacity: 0.3,
-                }}
-            />
-        </div>
-    );
-};
-
 const createRippleTexture = (time: number = 0): HTMLCanvasElement => {
     const size = 512;
     const canvas = document.createElement('canvas');
@@ -359,7 +268,6 @@ const WaterRippleEffect = () => {
 const Antigravity = () => {
     return (
         <div className="fixed inset-0 z-[-1] overflow-hidden pointer-events-none">
-            <BlurFollower />
             <WaterRippleEffect />
             <div
                 className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05] pointer-events-none z-20"
