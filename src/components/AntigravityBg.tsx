@@ -48,7 +48,7 @@ const BlurFollower = () => {
     );
 };
 
-const createRippleTexture = (): HTMLCanvasElement => {
+const createRippleTexture = (time: number = 0): HTMLCanvasElement => {
     const size = 512;
     const canvas = document.createElement('canvas');
     canvas.width = size;
@@ -60,56 +60,53 @@ const createRippleTexture = (): HTMLCanvasElement => {
     ctx.fillStyle = 'rgb(128, 128, 128)';
     ctx.fillRect(0, 0, size, size);
     
-    const rings = 6
-    const ringWidth = maxRadius * 0.85 / rings;
-    const fadeStart = maxRadius * 0.8;
+    const imageData = ctx.createImageData(size, size);
+    const data = imageData.data;
     
-    const randomOffsets = Array.from({ length: rings + 1 }, () => 
-        (Math.random() - 0.5) * ringWidth * 0.3
-    );
-    
-    for (let ring = 0; ring < rings; ring++) {
-        const innerR = ring * ringWidth + randomOffsets[ring];
-        const outerR = (ring + 1) * ringWidth + randomOffsets[ring + 1];
-        
-        if (outerR > fadeStart || innerR < 0) continue;
-        
-        const gradient = ctx.createRadialGradient(center, center, Math.max(0, innerR), center, center, outerR);
-        
-        const waveIntensity = 1 - (ring / rings) * 0.4;
-        
-        if (ring % 2 === 0) {
-            const val = Math.round(128 + 40 * waveIntensity);
-            gradient.addColorStop(0, `rgb(${val}, ${val}, ${val})`);
-            gradient.addColorStop(0.5, `rgb(${val + 20}, ${val + 20}, ${val + 20})`);
-            gradient.addColorStop(1, `rgb(${val}, ${val}, ${val})`);
-        } else {
-            const val = Math.round(128 - 40 * waveIntensity);
-            gradient.addColorStop(0, `rgb(${val}, ${val}, ${val})`);
-            gradient.addColorStop(0.5, `rgb(${val - 20}, ${val - 20}, ${val - 20})`);
-            gradient.addColorStop(1, `rgb(${val}, ${val}, ${val})`);
+    for (let y = 0; y < size; y++) {
+        for (let x = 0; x < size; x++) {
+            const dx = x - center;
+            const dy = y - center;
+            const r = Math.sqrt(dx * dx + dy * dy);
+            
+            let height = 0;
+            
+            const wave1 = Math.sin(r * 0.04 * Math.PI * 2 - time * 6) * Math.exp(-r * 0.008);
+            const wave2 = Math.sin(r * 0.06 * Math.PI * 2 - time * 9) * Math.exp(-r * 0.012) * 0.6;
+            // const wave3 = Math.sin(r * 0.16 * Math.PI * 2 - time * 16) * Math.exp(-r * 0.016) * 0.3;
+            
+            height = wave1 + wave2;
+            
+            const noiseX = x * 0.01 + time * 0.5;
+            const noiseY = y * 0.01 + time * 0.5;
+            const noise = (Math.sin(noiseX) * Math.cos(noiseY) + Math.sin(noiseY * 1.3) * Math.cos(noiseX * 0.7)) * 0.1;
+            height += noise;
+            
+            const decay = 1.0 / (1.0 + r * 0.002);
+            height *= decay;
+            
+            const value = Math.round(128 + height * 40);
+            const clampedValue = Math.max(0, Math.min(255, value));
+            
+            const idx = (y * size + x) * 4;
+            data[idx] = clampedValue;
+            data[idx + 1] = clampedValue;
+            data[idx + 2] = clampedValue;
+            data[idx + 3] = 255;
         }
-        
-        ctx.beginPath();
-        ctx.arc(center, center, outerR, 0, Math.PI * 2);
-        ctx.arc(center, center, Math.max(0, innerR), 0, Math.PI * 2, true);
-        ctx.fillStyle = gradient;
-        ctx.fill();
     }
     
+    ctx.putImageData(imageData, 0, 0);
+    
     const fadeGradient = ctx.createRadialGradient(
-        center, center, fadeStart,
+        center, center, maxRadius * 0.7,
         center, center, maxRadius
     );
     fadeGradient.addColorStop(0, 'rgba(128, 128, 128, 0)');
-    fadeGradient.addColorStop(0.6, 'rgba(128, 128, 128, 0.8)');
     fadeGradient.addColorStop(1, 'rgba(128, 128, 128, 1)');
     
-    ctx.beginPath();
-    ctx.arc(center, center, maxRadius, 0, Math.PI * 2);
-    ctx.arc(center, center, fadeStart, 0, Math.PI * 2, true);
     ctx.fillStyle = fadeGradient;
-    ctx.fill();
+    ctx.fillRect(0, 0, size, size);
     
     return canvas;
 };
@@ -122,7 +119,7 @@ interface Ripple {
     maxRadius: number;
 }
 
-const easeOutCubic = (t: number): number => 1 - Math.pow(1 - t, 3);
+const easeOutQuart = (t: number): number => 1 - Math.pow(1 - t, 4);
 
 const WaterRippleEffect = () => {
     const containerRef = useRef<HTMLDivElement>(null);
@@ -130,7 +127,6 @@ const WaterRippleEffect = () => {
     const bgSpriteRef = useRef<Sprite | null>(null);
     const dispSpriteRef = useRef<Sprite | null>(null);
     const ripplesRef = useRef<Ripple[]>([]);
-    const rippleTextureRef = useRef<Texture | null>(null);
     const initRef = useRef(false);
 
     useEffect(() => {
@@ -171,10 +167,8 @@ const WaterRippleEffect = () => {
                 app.stage.addChild(bgSprite);
                 bgSpriteRef.current = bgSprite;
 
-                const rippleCanvas = createRippleTexture();
-                rippleTextureRef.current = Texture.from(rippleCanvas);
-                
-                const dispSprite = new Sprite(rippleTextureRef.current);
+                const rippleCanvas = createRippleTexture(0);
+                const dispSprite = new Sprite(Texture.from(rippleCanvas));
                 dispSprite.anchor.set(0.5);
                 dispSprite.visible = false;
                 app.stage.addChild(dispSprite);
@@ -208,8 +202,8 @@ const WaterRippleEffect = () => {
                         if (progress >= 1) {
                             ripples.splice(i, 1);
                         } else {
-                            const easedProgress = easeOutCubic(progress);
-                            const strength = 45 * (1 - easedProgress);
+                            const easedProgress = easeOutQuart(progress);
+                            const strength = 60 * (1 - easedProgress);
                             
                             totalScale += strength;
                             count++;
@@ -220,9 +214,14 @@ const WaterRippleEffect = () => {
                     if (count > 0 && latestRipple && dispSpriteRef.current && bgSpriteRef.current) {
                         const elapsed = now - latestRipple.startTime;
                         const progress = elapsed / latestRipple.duration;
-                        const easedProgress = easeOutCubic(progress);
+                        const easedProgress = easeOutQuart(progress);
                         const radius = easedProgress * latestRipple.maxRadius;
                         
+                        const time = elapsed / 1000;
+                        const newCanvas = createRippleTexture(time);
+                        const newTexture = Texture.from(newCanvas);
+                        
+                        dispSpriteRef.current.texture = newTexture;
                         dispSpriteRef.current.position.set(latestRipple.x, latestRipple.y);
                         dispSpriteRef.current.scale.set(radius / 256);
                         dispSpriteRef.current.visible = true;
@@ -268,16 +267,9 @@ const WaterRippleEffect = () => {
 
             ripplesRef.current = [];
 
-            const newCanvas = createRippleTexture();
-            const newTexture = Texture.from(newCanvas);
-            
-            if (dispSpriteRef.current) {
-                dispSpriteRef.current.texture = newTexture;
-            }
-
             [
-                { radius: 900, duration: 1500 },
-                { radius: 1200, duration: 3500 },
+                { radius: 800, duration: 2500 },
+                { radius: 1100, duration: 3500 },
             ].forEach(wave => {
                 ripplesRef.current.push({
                     x, y,
