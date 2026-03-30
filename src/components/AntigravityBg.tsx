@@ -1,11 +1,11 @@
 import { useRef, useEffect } from 'react';
+import { Application, Sprite, Texture, DisplacementFilter, Assets } from 'pixi.js';
 
-// Pure CSS cursor-following glow with smooth transitions
-const GlowFollower = () => {
+const BlurFollower = () => {
     const followerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        // Mouse tracking with smooth lerp using requestAnimationFrame
+        // Smooth lerp tracking
         let mouseX = window.innerWidth / 2;
         let mouseY = window.innerHeight / 2;
         let currentX = mouseX;
@@ -25,8 +25,7 @@ const GlowFollower = () => {
         };
 
         const animate = () => {
-            // Smooth lerp factor (lower = smoother/slower)
-            const lerp = 0.08;
+            const lerp = 0.1;
             currentX += (mouseX - currentX) * lerp;
             currentY += (mouseY - currentY) * lerp;
 
@@ -52,95 +51,306 @@ const GlowFollower = () => {
     return (
         <div
             ref={followerRef}
-            className="glow-follower pointer-events-none fixed inset-0"
+            className="blur-follower absolute top-0 left-0 pointer-events-none"
             style={{
                 width: '1px',
                 height: '1px',
                 willChange: 'transform',
             }}
         >
-            {/* Core glow - brightest, smallest */}
-            <div
-                className="absolute rounded-full animate-pulse"
-                style={{
-                    width: '200px',
-                    height: '200px',
-                    left: '-100px',
-                    top: '-100px',
-                    background: 'radial-gradient(circle, var(--primary) 0%, transparent 70%)',
-                    opacity: 0.6,
-                    filter: 'blur(20px)',
-                    animation: 'glow-breathe 4s ease-in-out infinite',
-                }}
-            />
-            {/* Mid glow */}
+            {/* Core blur - transparent/gray */}
             <div
                 className="absolute rounded-full"
                 style={{
-                    width: '350px',
-                    height: '350px',
-                    left: '-175px',
-                    top: '-175px',
-                    background: 'radial-gradient(circle, var(--primary) 0%, transparent 60%)',
-                    opacity: 0.35,
-                    filter: 'blur(35px)',
-                    animation: 'glow-breathe 5s ease-in-out infinite 0.5s',
+                    width: '400px',
+                    height: '400px',
+                    left: '-200px',
+                    top: '-200px',
+                    backdropFilter: 'blur(12px)',
+                    WebkitBackdropFilter: 'blur(12px)',
+                    maskImage: 'radial-gradient(closest-side, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) 30%, rgba(0,0,0,0) 70%)',
+                    WebkitMaskImage: 'radial-gradient(closest-side, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) 30%, rgba(0,0,0,0) 70%)',
+                    opacity: 0.5,
                 }}
             />
-            {/* Outer glow - softest */}
+            {/* Outer softer blur */}
             <div
                 className="absolute rounded-full"
                 style={{
-                    width: '500px',
-                    height: '500px',
-                    left: '-250px',
-                    top: '-250px',
-                    background: 'radial-gradient(circle, var(--primary) 0%, transparent 50%)',
-                    opacity: 0.15,
-                    filter: 'blur(50px)',
-                    animation: 'glow-breathe 6s ease-in-out infinite 1s',
+                    width: '600px',
+                    height: '600px',
+                    left: '-300px',
+                    top: '-300px',
+                    backdropFilter: 'blur(20px)',
+                    WebkitBackdropFilter: 'blur(20px)',
+                    maskImage: 'radial-gradient(closest-side, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.2) 40%, rgba(0,0,0,0) 70%)',
+                    WebkitMaskImage: 'radial-gradient(closest-side, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.2) 40%, rgba(0,0,0,0) 70%)',
+                    opacity: 0.3,
                 }}
             />
-            {/* Ambient glow */}
-            <div
-                className="absolute rounded-full"
-                style={{
-                    width: '700px',
-                    height: '700px',
-                    left: '-350px',
-                    top: '-350px',
-                    background: 'radial-gradient(circle, var(--primary) 0%, transparent 40%)',
-                    opacity: 0.08,
-                    filter: 'blur(70px)',
-                    animation: 'glow-breathe 7s ease-in-out infinite 1.5s',
-                }}
-            />
-            <style>{`
-                @keyframes glow-breathe {
-                    0%, 100% { transform: scale(1); opacity: inherit; }
-                    50% { transform: scale(1.1); opacity: 0.7; }
-                }
-            `}</style>
         </div>
     );
 };
 
-// Subtle grain overlay
-const GrainOverlay = () => (
-    <div
-        className="absolute inset-0 pointer-events-none z-20"
-        style={{
-            opacity: '0.03',
-            backgroundImage: `url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIj48ZmlsdGVyIGlkPSJhIiB4PSIwIiB5PSIwIj48ZmVUdXJidWxlbmNlIGJhc2VGcmVxdWVuY3k9Ii43NSIgc3RpdGNoVGlsZXM9InN0aXRjaCIgdHlwZT0iZnJhY3RhbE5vaXNlIi8+PGZlQ29sb3JNYXRyaXggdHlwZT0ic2F0dXJhdGUiIHZhbHVlcz0iMCIvPjwvZmlsdGVyPjxwYXRoIGQ9Ik0wIDBoMzAwdjMwMEgweiIgZmlsdGVyPSJ1cmwoI2EpIiBvcGFjaXR5PSIuMDUiLz48L3N2Zz4=')`,
-        }}
-    />
-);
+const createRippleTexture = (time: number = 0): HTMLCanvasElement => {
+    const size = 512;
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d')!;
+    const center = size / 2;
+    const maxRadius = center;
+
+    ctx.fillStyle = 'rgb(128, 128, 128)';
+    ctx.fillRect(0, 0, size, size);
+
+    const imageData = ctx.createImageData(size, size);
+    const data = imageData.data;
+
+    for (let y = 0; y < size; y++) {
+        for (let x = 0; x < size; x++) {
+            const dx = x - center;
+            const dy = y - center;
+            const r = Math.sqrt(dx * dx + dy * dy);
+
+            let height = 0;
+
+            const wave1 = Math.sin(r * 0.04 * Math.PI * 2 - time * 6) * Math.exp(-r * 0.008);
+            const wave2 = Math.sin(r * 0.06 * Math.PI * 2 - time * 9) * Math.exp(-r * 0.012) * 0.6;
+
+            height = wave1 + wave2;
+
+            const noiseX = x * 0.01 + time * 0.5;
+            const noiseY = y * 0.01 + time * 0.5;
+            const noise = (Math.sin(noiseX) * Math.cos(noiseY) + Math.sin(noiseY * 1.3) * Math.cos(noiseX * 0.7)) * 0.1;
+            height += noise;
+
+            const decay = 1.0 / (1.0 + r * 0.002);
+            height *= decay;
+
+            const value = Math.round(128 + height * 40);
+            const clampedValue = Math.max(0, Math.min(255, value));
+
+            const idx = (y * size + x) * 4;
+            data[idx] = clampedValue;
+            data[idx + 1] = clampedValue;
+            data[idx + 2] = clampedValue;
+            data[idx + 3] = 255;
+        }
+    }
+
+    ctx.putImageData(imageData, 0, 0);
+
+    const fadeGradient = ctx.createRadialGradient(
+        center, center, maxRadius * 0.7,
+        center, center, maxRadius
+    );
+    fadeGradient.addColorStop(0, 'rgba(128, 128, 128, 0)');
+    fadeGradient.addColorStop(1, 'rgba(128, 128, 128, 1)');
+
+    ctx.fillStyle = fadeGradient;
+    ctx.fillRect(0, 0, size, size);
+
+    return canvas;
+};
+
+interface Ripple {
+    x: number;
+    y: number;
+    startTime: number;
+    duration: number;
+    maxRadius: number;
+}
+
+const easeOutQuart = (t: number): number => 1 - Math.pow(1 - t, 4);
+
+const WaterRippleEffect = () => {
+    const containerRef = useRef<HTMLDivElement>(null);
+    const appRef = useRef<Application | null>(null);
+    const bgSpriteRef = useRef<Sprite | null>(null);
+    const dispSpriteRef = useRef<Sprite | null>(null);
+    const ripplesRef = useRef<Ripple[]>([]);
+    const initRef = useRef(false);
+
+    useEffect(() => {
+        if (!containerRef.current || initRef.current) return;
+
+        const init = async () => {
+            try {
+                const bgStyle = getComputedStyle(document.documentElement).getPropertyValue('--bg-url');
+                const match = bgStyle.match(/url\(['"]?([^'")\s]+)['"]?\)/);
+                const bgUrl = match?.[1];
+
+                if (!bgUrl) return;
+
+                const app = new Application();
+
+                await app.init({
+                    width: window.innerWidth,
+                    height: window.innerHeight,
+                    backgroundAlpha: 0,
+                    antialias: true,
+                    resolution: window.devicePixelRatio || 1,
+                    autoDensity: true,
+                });
+
+                if (!containerRef.current) {
+                    app.destroy(true);
+                    return;
+                }
+
+                containerRef.current.appendChild(app.canvas);
+                appRef.current = app;
+                initRef.current = true;
+
+                const bgTexture = await Assets.load(bgUrl);
+                const bgSprite = new Sprite(bgTexture);
+                bgSprite.width = app.screen.width;
+                bgSprite.height = app.screen.height;
+                app.stage.addChild(bgSprite);
+                bgSpriteRef.current = bgSprite;
+
+                const rippleCanvas = createRippleTexture(0);
+                const dispSprite = new Sprite(Texture.from(rippleCanvas));
+                dispSprite.anchor.set(0.5);
+                dispSprite.visible = false;
+                app.stage.addChild(dispSprite);
+                dispSpriteRef.current = dispSprite;
+
+                const filter = new DisplacementFilter(dispSprite);
+                filter.scale.set(0);
+                bgSprite.filters = [filter];
+
+                window.addEventListener('resize', () => {
+                    if (appRef.current && bgSpriteRef.current) {
+                        appRef.current.renderer.resize(window.innerWidth, window.innerHeight);
+                        bgSpriteRef.current.width = appRef.current.screen.width;
+                        bgSpriteRef.current.height = appRef.current.screen.height;
+                    }
+                });
+
+                app.ticker.add(() => {
+                    const now = Date.now();
+                    const ripples = ripplesRef.current;
+
+                    let totalScale = 0;
+                    let count = 0;
+                    let latestRipple: Ripple | null = null;
+
+                    for (let i = ripples.length - 1; i >= 0; i--) {
+                        const r = ripples[i];
+                        const elapsed = now - r.startTime;
+                        const progress = elapsed / r.duration;
+
+                        if (progress >= 1) {
+                            ripples.splice(i, 1);
+                        } else {
+                            const easedProgress = easeOutQuart(progress);
+                            const strength = 60 * (1 - easedProgress);
+
+                            totalScale += strength;
+                            count++;
+                            latestRipple = r;
+                        }
+                    }
+
+                    if (count > 0 && latestRipple && dispSpriteRef.current && bgSpriteRef.current) {
+                        const elapsed = now - latestRipple.startTime;
+                        const progress = elapsed / latestRipple.duration;
+                        const easedProgress = easeOutQuart(progress);
+                        const radius = easedProgress * latestRipple.maxRadius;
+
+                        const time = elapsed / 1000;
+                        const newCanvas = createRippleTexture(time);
+                        const newTexture = Texture.from(newCanvas);
+
+                        dispSpriteRef.current.texture = newTexture;
+                        dispSpriteRef.current.position.set(latestRipple.x, latestRipple.y);
+                        dispSpriteRef.current.scale.set(radius / 256);
+                        dispSpriteRef.current.visible = true;
+
+                        const filter = bgSpriteRef.current.filters?.[0] as DisplacementFilter;
+                        if (filter) {
+                            filter.scale.set(totalScale / count);
+                        }
+                    } else if (dispSpriteRef.current && bgSpriteRef.current) {
+                        dispSpriteRef.current.visible = false;
+                        const filter = bgSpriteRef.current.filters?.[0] as DisplacementFilter;
+                        if (filter) filter.scale.set(0);
+                    }
+                });
+            } catch (err) {
+                console.error('[Ripple] Init error:', err);
+            }
+        };
+
+        const checkBg = () => {
+            if (document.body.classList.contains('bg-loaded')) {
+                setTimeout(init, 200);
+            } else {
+                setTimeout(checkBg, 100);
+            }
+        };
+
+        checkBg();
+
+        return () => {
+            ripplesRef.current = [];
+            if (appRef.current) {
+                appRef.current.destroy(true);
+                appRef.current = null;
+            }
+            initRef.current = false;
+        };
+    }, []);
+
+    useEffect(() => {
+        const createRipple = (x: number, y: number) => {
+            if (!appRef.current) return;
+
+            ripplesRef.current = [];
+
+            [
+                { radius: 800, duration: 2500 },
+                { radius: 1100, duration: 3500 },
+            ].forEach(wave => {
+                ripplesRef.current.push({
+                    x, y,
+                    startTime: Date.now(),
+                    duration: wave.duration,
+                    maxRadius: wave.radius,
+                });
+            });
+        };
+
+        const onClick = (e: MouseEvent) => createRipple(e.clientX, e.clientY);
+        const onTouch = (e: TouchEvent) => {
+            if (e.touches[0]) createRipple(e.touches[0].clientX, e.touches[0].clientY);
+        };
+
+        window.addEventListener('click', onClick);
+        window.addEventListener('touchstart', onTouch, { passive: true });
+
+        return () => {
+            window.removeEventListener('click', onClick);
+            window.removeEventListener('touchstart', onTouch);
+        };
+    }, []);
+
+    return <div ref={containerRef} className="absolute inset-0 pointer-events-none z-30" />;
+};
 
 const Antigravity = () => {
     return (
         <div className="fixed inset-0 z-[-1] overflow-hidden pointer-events-none">
-            <GlowFollower />
-            <GrainOverlay />
+            <BlurFollower />
+            <WaterRippleEffect />
+            <div
+                className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05] pointer-events-none z-20"
+                style={{
+                    backgroundImage: `url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIj48ZmlsdGVyIGlkPSJhIiB4PSIwIiB5PSIwIj48ZmVUdXJidWxlbmNlIGJhc2VGcmVxdWVuY3k9Ii43NSIgc3RpdGNoVGlsZXM9InN0aXRjaCIgdHlwZT0iZnJhY3RhbE5vaXNlIi8+PGZlQ29sb3JNYXRyaXggdHlwZT0ic2F0dXJhdGUiIHZhbHVlcz0iMCIvPjwvZmlsdGVyPjxwYXRoIGQ9Ik0wIDBoMzAwdjMwMEgweiIgZmlsdGVyPSJ1cmwoI2EpIiBvcGFjaXR5PSIuMDUiLz48L3N2Zz4=')`
+                }}
+            />
         </div>
     );
 };
