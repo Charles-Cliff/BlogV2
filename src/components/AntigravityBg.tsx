@@ -230,6 +230,9 @@ const WaterRippleEffect = () => {
     }, []);
 
     useEffect(() => {
+        const mouseRef = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+        const lastClickRef = { time: 0 };
+
         const createRipple = (x: number, y: number) => {
             if (!appRef.current) return;
 
@@ -248,17 +251,35 @@ const WaterRippleEffect = () => {
             });
         };
 
-        const onClick = (e: MouseEvent) => createRipple(e.clientX, e.clientY);
+        const onMouseMove = (e: MouseEvent) => {
+            mouseRef.x = e.clientX;
+            mouseRef.y = e.clientY;
+        };
+        const onClick = (e: MouseEvent) => {
+            lastClickRef.time = Date.now();
+            createRipple(e.clientX, e.clientY);
+        };
         const onTouch = (e: TouchEvent) => {
+            lastClickRef.time = Date.now();
             if (e.touches[0]) createRipple(e.touches[0].clientX, e.touches[0].clientY);
         };
 
+        // Auto-trigger ripple every 1.5s only if user hasn't clicked in the last 1.5s
+        const intervalId = setInterval(() => {
+            if (Date.now() - lastClickRef.time > 1500) {
+                createRipple(mouseRef.x, mouseRef.y);
+            }
+        }, 1500);
+
+        window.addEventListener('mousemove', onMouseMove);
         window.addEventListener('click', onClick);
         window.addEventListener('touchstart', onTouch, { passive: true });
 
         return () => {
+            window.removeEventListener('mousemove', onMouseMove);
             window.removeEventListener('click', onClick);
             window.removeEventListener('touchstart', onTouch);
+            clearInterval(intervalId);
         };
     }, []);
 
