@@ -30,9 +30,23 @@ import "katex/dist/katex.css";
 
 // 随机选择背景图
 const bgSrc = siteConfig.background.src;
-const randomBgSrc = Array.isArray(bgSrc) 
-	? bgSrc[Math.floor(Math.random() * bgSrc.length)] 
-	: bgSrc;
+let randomBgSrc, randomBgBrightness;
+if (Array.isArray(bgSrc)) {
+	const randomIndex = Math.floor(Math.random() * bgSrc.length);
+	if (typeof bgSrc[randomIndex] === 'object') {
+		randomBgSrc = bgSrc[randomIndex].src;
+		randomBgBrightness = bgSrc[randomIndex].brightness || 1;
+	} else {
+		randomBgSrc = bgSrc[randomIndex];
+		randomBgBrightness = 1;
+	}
+} else if (typeof bgSrc === 'object') {
+	randomBgSrc = bgSrc.src;
+	randomBgBrightness = bgSrc.brightness || 1;
+} else {
+	randomBgSrc = bgSrc;
+	randomBgBrightness = 1;
+}
 
 interface Props {
 	title?: string;
@@ -234,7 +248,8 @@ const bannerOffset =
 			'bg-size': siteConfig.background.size || 'cover',
 			'bg-repeat': siteConfig.background.repeat || 'no-repeat',
 			'bg-attachment': siteConfig.background.attachment || 'fixed',
-			'bg-opacity': (siteConfig.background.opacity || 0.3).toString()
+			'bg-opacity': (siteConfig.background.opacity || 0.3).toString(),
+			'bg-brightness': randomBgBrightness.toString()
 		}}>
 			:root {
 				--bg-url: var(--bg-url);
@@ -244,6 +259,7 @@ const bannerOffset =
 				--bg-repeat: var(--bg-repeat);
 				--bg-attachment: var(--bg-attachment);
 				--bg-opacity: var(--bg-opacity);
+				--bg-brightness: var(--bg-brightness);
 			}
 			
 			/* Background image configuration */
@@ -255,6 +271,7 @@ const bannerOffset =
 				--bg-repeat: var(--bg-repeat);
 				--bg-attachment: var(--bg-attachment);
 				--bg-opacity: var(--bg-opacity);
+				--bg-brightness: var(--bg-brightness);
 			}
 			
 			body::before {
@@ -284,6 +301,7 @@ const bannerOffset =
 				backface-visibility: hidden !important;
 				transform: translate3d(0, 0, 0) !important;
 				-webkit-transform: translate3d(0, 0, 0) !important;
+				filter: brightness(var(--bg-brightness)) !important;
 			}
 
 			body.bg-loaded::before {
@@ -376,7 +394,7 @@ const bannerOffset =
 		</style>
 		<div id="cookie-consent-banner">
 			<div class="cc-title">🍪 Cookie</div>
-			<div class="cc-desc">本站使用 Cookie 及第三方服务（Google Analytics、AdSense）改善浏览体验。Umami 统计不使用 Cookie，始终运行。<br/>This site uses cookies and third-party services (Google Analytics, AdSense). Umami analytics is cookie-free and always active.<br/><a href="/about-privacy/">隐私政策 / Privacy Policy</a></div>
+			<div class="cc-desc">本站使用 Cookie 及第三方服务（Google Analytics、AdSense）改善浏览体验。<br/>This site uses cookies and third-party services (Google Analytics, AdSense).<br/><a href="/about-privacy/">隐私政策 / Privacy Policy</a></div>
 			<div class="cc-actions">
 				<label class="cc-always"><input type="checkbox" id="cc-always" />始终记住 Always</label>
 				<button class="cc-btn cc-btn-yes" id="cookie-accept">同意 Yes</button>

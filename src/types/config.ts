@@ -7,6 +7,11 @@ export type AppItem = {
 };
 import type { AUTO_MODE, DARK_MODE, LIGHT_MODE } from "@constants/constants";
 
+export type BackgroundImage = {
+	src: string;
+	brightness?: number; // 亮度值 (0-1)
+};
+
 export type SiteConfig = {
 	title: string;
 	subtitle: string;
@@ -32,7 +37,7 @@ export type SiteConfig = {
 	};
 	background: {
 		enable: boolean;
-		src: string | string[]; // 单张图片或图片数组（随机选择）
+		src: string | string[] | BackgroundImage | BackgroundImage[]; // 单张图片、图片数组或带亮度的图片对象/数组
 		position?: "top" | "center" | "bottom";
 		size?: "cover" | "contain" | "auto";
 		repeat?: "no-repeat" | "repeat" | "repeat-x" | "repeat-y";

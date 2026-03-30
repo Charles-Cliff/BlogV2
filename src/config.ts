@@ -38,7 +38,8 @@ export const siteConfig: SiteConfig = {
 	background: {
 		enable: true, // Enable background image
 		src: [ // 背景图数组，页面加载时随机选择一张
-			"/images/bgs/KA.png"
+			{ src: "/images/bgs/KA.png", brightness: 0.9 },
+			{ src: "/images/bgs/Asuna01.png", brightness: 0.7 }
 		],
 		position: "center", // Background position: 'top', 'center', 'bottom'
 		size: "cover", // Background size: 'cover', 'contain', 'auto'
@@ -60,10 +61,10 @@ export const siteConfig: SiteConfig = {
 	],
 	apps: [
 		{
-			name: "提示词优化",
-			url: "https://prompt.micostar.cc",
-			image: "/favicon/prompts.webp",
-			description: "AI 提示词一键优化工具",
+			name: "LifeGame",
+			url: "https://github.com/Charles-Cliff/LifeGame",
+			image: "/images/apps/LifeGame.png",
+			description: "一款将生活管理游戏化的 Android 应用",
 			external: true,
 		},
 	],

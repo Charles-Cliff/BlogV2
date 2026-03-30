@@ -11,9 +11,9 @@
 
 ```json
 {
-  "name": "Cliff Blog",
-  "avatar": "https://img.micostar.cc/images/avatar.webp",
-  "introduction": "爱我所爱，我们是彼此永远的动力",
+  "name": "384400's Blog",
+  "avatar": "https://www.gzhblog.cn/images/avatar.webp",
+  "introduction": "兴趣使然的独立开发者",
   "url": "https://www.gzhblog.cn",
   "friendsPage": "https://www.gzhblog.cn/friends"
 }
