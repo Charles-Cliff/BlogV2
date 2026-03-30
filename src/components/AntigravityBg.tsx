@@ -60,17 +60,21 @@ const createRippleTexture = (): HTMLCanvasElement => {
     ctx.fillStyle = 'rgb(128, 128, 128)';
     ctx.fillRect(0, 0, size, size);
     
-    const rings = 10;
+    const rings = 6
     const ringWidth = maxRadius * 0.85 / rings;
     const fadeStart = maxRadius * 0.8;
     
+    const randomOffsets = Array.from({ length: rings + 1 }, () => 
+        (Math.random() - 0.5) * ringWidth * 0.3
+    );
+    
     for (let ring = 0; ring < rings; ring++) {
-        const innerR = ring * ringWidth;
-        const outerR = (ring + 1) * ringWidth;
+        const innerR = ring * ringWidth + randomOffsets[ring];
+        const outerR = (ring + 1) * ringWidth + randomOffsets[ring + 1];
         
-        if (outerR > fadeStart) continue;
+        if (outerR > fadeStart || innerR < 0) continue;
         
-        const gradient = ctx.createRadialGradient(center, center, innerR, center, center, outerR);
+        const gradient = ctx.createRadialGradient(center, center, Math.max(0, innerR), center, center, outerR);
         
         const waveIntensity = 1 - (ring / rings) * 0.4;
         
@@ -88,7 +92,7 @@ const createRippleTexture = (): HTMLCanvasElement => {
         
         ctx.beginPath();
         ctx.arc(center, center, outerR, 0, Math.PI * 2);
-        ctx.arc(center, center, innerR, 0, Math.PI * 2, true);
+        ctx.arc(center, center, Math.max(0, innerR), 0, Math.PI * 2, true);
         ctx.fillStyle = gradient;
         ctx.fill();
     }
@@ -126,6 +130,7 @@ const WaterRippleEffect = () => {
     const bgSpriteRef = useRef<Sprite | null>(null);
     const dispSpriteRef = useRef<Sprite | null>(null);
     const ripplesRef = useRef<Ripple[]>([]);
+    const rippleTextureRef = useRef<Texture | null>(null);
     const initRef = useRef(false);
 
     useEffect(() => {
@@ -167,9 +172,9 @@ const WaterRippleEffect = () => {
                 bgSpriteRef.current = bgSprite;
 
                 const rippleCanvas = createRippleTexture();
-                const rippleTexture = Texture.from(rippleCanvas);
+                rippleTextureRef.current = Texture.from(rippleCanvas);
                 
-                const dispSprite = new Sprite(rippleTexture);
+                const dispSprite = new Sprite(rippleTextureRef.current);
                 dispSprite.anchor.set(0.5);
                 dispSprite.visible = false;
                 app.stage.addChild(dispSprite);
@@ -191,8 +196,7 @@ const WaterRippleEffect = () => {
                     const now = Date.now();
                     const ripples = ripplesRef.current;
                     
-                    let totalScaleX = 0;
-                    let totalScaleY = 0;
+                    let totalScale = 0;
                     let count = 0;
                     let latestRipple: Ripple | null = null;
 
@@ -207,8 +211,7 @@ const WaterRippleEffect = () => {
                             const easedProgress = easeOutCubic(progress);
                             const strength = 45 * (1 - easedProgress);
                             
-                            totalScaleX += strength;
-                            totalScaleY += strength;
+                            totalScale += strength;
                             count++;
                             latestRipple = r;
                         }
@@ -226,7 +229,7 @@ const WaterRippleEffect = () => {
                         
                         const filter = bgSpriteRef.current.filters?.[0] as DisplacementFilter;
                         if (filter) {
-                            filter.scale.set(totalScaleX / count);
+                            filter.scale.set(totalScale / count);
                         }
                     } else if (dispSpriteRef.current && bgSpriteRef.current) {
                         dispSpriteRef.current.visible = false;
@@ -265,10 +268,16 @@ const WaterRippleEffect = () => {
 
             ripplesRef.current = [];
 
+            const newCanvas = createRippleTexture();
+            const newTexture = Texture.from(newCanvas);
+            
+            if (dispSpriteRef.current) {
+                dispSpriteRef.current.texture = newTexture;
+            }
+
             [
-                { delay: 0, radius: 300, duration: 2200 },
-                { delay: 0, radius: 380, duration: 2800 },
-                { delay: 0, radius: 460, duration: 3400 },
+                { radius: 900, duration: 1500 },
+                { radius: 1200, duration: 3500 },
             ].forEach(wave => {
                 ripplesRef.current.push({
                     x, y,
