@@ -28,25 +28,16 @@ import type { Favicon } from "../types/config";
 import { url, pathsEqual } from "../utils/url-utils";
 import "katex/dist/katex.css";
 
-// 随机选择背景图
-const bgSrc = siteConfig.background.src;
-let randomBgSrc, randomBgBrightness;
-if (Array.isArray(bgSrc)) {
-	const randomIndex = Math.floor(Math.random() * bgSrc.length);
-	if (typeof bgSrc[randomIndex] === 'object') {
-		randomBgSrc = bgSrc[randomIndex].src;
-		randomBgBrightness = bgSrc[randomIndex].brightness || 1;
-	} else {
-		randomBgSrc = bgSrc[randomIndex];
-		randomBgBrightness = 1;
-	}
-} else if (typeof bgSrc === 'object') {
-	randomBgSrc = bgSrc.src;
-	randomBgBrightness = bgSrc.brightness || 1;
-} else {
-	randomBgSrc = bgSrc;
-	randomBgBrightness = 1;
-}
+// 背景图配置 - 传递给客户端进行运行时随机选择
+const bgConfig = {
+	enable: siteConfig.background.enable,
+	src: siteConfig.background.src,
+	position: siteConfig.background.position || 'center',
+	size: siteConfig.background.size || 'cover',
+	repeat: siteConfig.background.repeat || 'no-repeat',
+	attachment: siteConfig.background.attachment || 'fixed',
+	opacity: siteConfig.background.opacity || 0.3,
+};
 
 interface Props {
 	title?: string;
@@ -163,7 +154,7 @@ const bannerOffset =
 		))}
 
 		<!-- Set the theme before the page is rendered to avoid a flash -->
-		<script is:inline define:vars={{DEFAULT_THEME, LIGHT_MODE, DARK_MODE, AUTO_MODE, BANNER_HEIGHT_EXTEND, PAGE_WIDTH, configHue, forceDarkMode: siteConfig.themeColor.forceDarkMode}}>
+		<script is:inline define:vars={{DEFAULT_THEME, LIGHT_MODE, DARK_MODE, AUTO_MODE, BANNER_HEIGHT_EXTEND, PAGE_WIDTH, configHue, forceDarkMode: siteConfig.themeColor.forceDarkMode, bgConfigJson: JSON.stringify(bgConfig)}}>
 			// Force dark mode if configured
 			if (forceDarkMode) {
 				document.documentElement.classList.add('dark');
@@ -196,84 +187,78 @@ const bannerOffset =
 			offset = offset - offset % 4;
 			document.documentElement.style.setProperty('--banner-height-extend', `${offset}px`);
 
-			// Background image loading detection with mobile support and fallback
-			const bgUrl = getComputedStyle(document.documentElement).getPropertyValue('--bg-url').trim();
-			const bgEnable = getComputedStyle(document.documentElement).getPropertyValue('--bg-enable').trim();
-			
-			//console.log('[BG Debug] URL:', bgUrl, 'Enable:', bgEnable);
-			
-			if (bgUrl && bgUrl !== 'none' && bgEnable === '1') {
-				const urlMatch = bgUrl.match(/url\(["']?([^"')]+)["']?\)/);
-				//console.log('[BG Debug] URL Match:', urlMatch);
-				
-				if (urlMatch) {
-					let imageUrl = urlMatch[1];
-					//console.log('[BG Debug] Loading:', imageUrl);
-					
+			// Runtime random background selection (runs on each page visit, not just build time)
+			// Set CSS custom properties on <html> element which are inherited by body::before
+			try {
+				const bgConfig = JSON.parse(bgConfigJson);
+				if (bgConfig.enable && Array.isArray(bgConfig.src) && bgConfig.src.length > 0) {
+					const randomIndex = Math.floor(Math.random() * bgConfig.src.length);
+					const selected = bgConfig.src[randomIndex];
+					const selectedSrc = typeof selected === 'object' ? selected.src : selected;
+					const selectedBrightness = typeof selected === 'object' ? (selected.brightness || 1) : 1;
+					const bgOpacity = bgConfig.opacity || 0.3;
+
+					// Set CSS variables on <html> element (will be inherited by body::before)
+					document.documentElement.style.setProperty('--bg-url', `url(${selectedSrc})`);
+					document.documentElement.style.setProperty('--bg-brightness', selectedBrightness.toString());
+					document.documentElement.style.setProperty('--bg-opacity', bgOpacity.toString());
+
+					// Create an image to preload
 					const img = new Image();
-					// 注意：移除 crossOrigin 属性，CSS 背景图不需要 CORS
-					// img.crossOrigin = 'anonymous'; // 暂时禁用，简化调试
-					
 					img.onload = function() {
-						//console.log('[BG Debug] Image loaded successfully');
 						document.body.classList.add('bg-loaded');
 						document.documentElement.style.setProperty('--card-bg', 'var(--card-bg-transparent)');
 						document.documentElement.style.setProperty('--float-panel-bg', 'var(--float-panel-bg-transparent)');
 					};
-					
-					img.onerror = function(e) {
-						// 加载失败时直接显示背景
-						//console.warn('[BG Debug] Image load failed, showing anyway:', e);
+					img.onerror = function() {
+						// Show background anyway even if image fails
 						document.body.classList.add('bg-loaded');
+						document.documentElement.style.setProperty('--card-bg', 'var(--card-bg-transparent)');
+						document.documentElement.style.setProperty('--float-panel-bg', 'var(--float-panel-bg-transparent)');
 					};
-					
-					img.src = imageUrl;
-					
-					// 超时保护:5秒后强制显示
+					img.src = selectedSrc;
+
+					// Timeout fallback: 5 seconds
 					setTimeout(function() {
 						if (!document.body.classList.contains('bg-loaded')) {
-							//console.warn('[BG Debug] Timeout, forcing display');
 							document.body.classList.add('bg-loaded');
+							document.documentElement.style.setProperty('--card-bg', 'var(--card-bg-transparent)');
+							document.documentElement.style.setProperty('--float-panel-bg', 'var(--float-panel-bg-transparent)');
 						}
 					}, 5000);
 				}
+			} catch (e) {
+				console.warn('[BG] Failed to parse background config:', e);
 			}
 		</script>
 		<style define:vars={{
 			configHue,
 			'page-width': `${PAGE_WIDTH}rem`,
-			'bg-url': randomBgSrc ? `url(${randomBgSrc})` : 'none',
 			'bg-enable': siteConfig.background.enable ? '1' : '0',
 			'bg-position': siteConfig.background.position || 'center',
 			'bg-size': siteConfig.background.size || 'cover',
 			'bg-repeat': siteConfig.background.repeat || 'no-repeat',
 			'bg-attachment': siteConfig.background.attachment || 'fixed',
 			'bg-opacity': (siteConfig.background.opacity || 0.3).toString(),
-			'bg-brightness': randomBgBrightness.toString()
+			'bg-config-json': JSON.stringify(bgConfig)
 		}}>
 			:root {
-				--bg-url: var(--bg-url);
-				--bg-enable: var(--bg-enable);
-				--bg-position: var(--bg-position);
-				--bg-size: var(--bg-size);
-				--bg-repeat: var(--bg-repeat);
-				--bg-attachment: var(--bg-attachment);
-				--bg-opacity: var(--bg-opacity);
-				--bg-brightness: var(--bg-brightness);
+				--bg-position: center;
+				--bg-size: cover;
+				--bg-repeat: no-repeat;
+				--bg-attachment: fixed;
+				--bg-opacity: 0.9;
 			}
-			
+
 			/* Background image configuration */
 			body {
-				--bg-url: var(--bg-url);
-				--bg-enable: var(--bg-enable);
-				--bg-position: var(--bg-position);
-				--bg-size: var(--bg-size);
-				--bg-repeat: var(--bg-repeat);
-				--bg-attachment: var(--bg-attachment);
-				--bg-opacity: var(--bg-opacity);
-				--bg-brightness: var(--bg-brightness);
+				--bg-position: center;
+				--bg-size: cover;
+				--bg-repeat: no-repeat;
+				--bg-attachment: fixed;
+				--bg-opacity: 0.9;
 			}
-			
+
 			body::before {
 				content: '' !important;
 				position: fixed !important;
