@@ -162,8 +162,24 @@ const WaterRippleEffect = () => {
 
                 const bgTexture = await Assets.load(bgUrl);
                 const bgSprite = new Sprite(bgTexture);
-                bgSprite.width = app.screen.width;
-                bgSprite.height = app.screen.height;
+
+                // Maintain aspect ratio while covering the screen (like background-size: cover)
+                const texAspect = bgTexture.width / bgTexture.height;
+                const screenAspect = app.screen.width / app.screen.height;
+
+                if (texAspect > screenAspect) {
+                    // Texture is wider - fit by height
+                    bgSprite.height = app.screen.height;
+                    bgSprite.width = app.screen.height * texAspect;
+                } else {
+                    // Texture is taller - fit by width
+                    bgSprite.width = app.screen.width;
+                    bgSprite.height = app.screen.width / texAspect;
+                }
+                // Center the sprite
+                bgSprite.x = (app.screen.width - bgSprite.width) / 2;
+                bgSprite.y = (app.screen.height - bgSprite.height) / 2;
+
                 app.stage.addChild(bgSprite);
                 bgSpriteRef.current = bgSprite;
 

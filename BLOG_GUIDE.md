@@ -25,11 +25,11 @@ pnpm run build
 ---
 title: 文章标题                    # 必填
 published: 2025-09-02T20:10:14    # 发布时间
+updated:   2026-02-02T20:10:14	  # 更新时间
+draft: false                      # 是否为草稿
 description: '文章描述'            # SEO描述
 image: 'https://example.com/img.jpg'  # 封面图片
 tags: [标签1, 标签2, 标签3]       # 标签
-category: 分类名称                # 分类
-draft: false                      # 是否为草稿
 lang: ''                         # 语言(默认继承配置)
 pinned: true                     # 置顶文章（显示在列表最前面）
 prerenderAll: true               # 预渲染所有内容（适用于长文章，确保滚动流畅）
@@ -46,18 +46,6 @@ prerenderAll: true               # 预渲染所有内容（适用于长文章，
 # 一级标题
 ## 二级标题
 ### 三级标题
-```
-
-#### 图片
-```markdown
-# 使用您的双CDN图床
-![图片描述](https://image.ai0728.com.cn/your-image.jpg)
-
-# 本地图片（放在 public/images/ 目录下）
-![本地图片](/images/example.png)
-
-# 相对路径本地图片
-![本地图片](./images/local-image.jpg)
 ```
 
 #### 代码块
@@ -117,34 +105,6 @@ function hello() {
 # 组合样式
 <span style="color: red; font-weight: bold; text-decoration: underline;">红色加粗下划线</span>
 ```
-
-## 🖼️ 图片管理
-
-### 双CDN图床配置
-已配置的图床系统：
-- 主图床: `image.ai0728.com.cn`
-- 备用图床: `image.cloudrunmax.top`
-
-### 图片使用方式
-
-1. **直接使用图床链接**
-```markdown
-![图片](https://image.ai0728.com.cn/your-image.jpg)
-```
-
-2. **本地图片**
-将图片放在 `src/content/posts/` 相对路径下：
-```markdown
-![本地图片](./images/example.jpg)
-```
-
-3. **封面图片**
-在 Front Matter 中设置：
-```yaml
-image: 'https://image.ai0728.com.cn/cover.jpg'
-```
-
-## 📂 文件组织
 
 ### 目录结构
 ```
