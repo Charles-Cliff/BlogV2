@@ -28,25 +28,8 @@ import type { Favicon } from "../types/config";
 import { url, pathsEqual } from "../utils/url-utils";
 import "katex/dist/katex.css";
 
-// 随机选择背景图
-const bgSrc = siteConfig.background.src;
-let randomBgSrc, randomBgBrightness;
-if (Array.isArray(bgSrc)) {
-	const randomIndex = Math.floor(Math.random() * bgSrc.length);
-	if (typeof bgSrc[randomIndex] === 'object') {
-		randomBgSrc = bgSrc[randomIndex].src;
-		randomBgBrightness = bgSrc[randomIndex].brightness || 1;
-	} else {
-		randomBgSrc = bgSrc[randomIndex];
-		randomBgBrightness = 1;
-	}
-} else if (typeof bgSrc === 'object') {
-	randomBgSrc = bgSrc.src;
-	randomBgBrightness = bgSrc.brightness || 1;
-} else {
-	randomBgSrc = bgSrc;
-	randomBgBrightness = 1;
-}
+// 背景图配置 - 移到客户端随机选择
+const bgConfig = siteConfig.background;
 
 interface Props {
 	title?: string;
@@ -163,7 +146,7 @@ const bannerOffset =
 		))}
 
 		<!-- Set the theme before the page is rendered to avoid a flash -->
-		<script is:inline define:vars={{DEFAULT_THEME, LIGHT_MODE, DARK_MODE, AUTO_MODE, BANNER_HEIGHT_EXTEND, PAGE_WIDTH, configHue, forceDarkMode: siteConfig.themeColor.forceDarkMode}}>
+		<script is:inline define:vars={{DEFAULT_THEME, LIGHT_MODE, DARK_MODE, AUTO_MODE, BANNER_HEIGHT_EXTEND, PAGE_WIDTH, configHue, forceDarkMode: siteConfig.themeColor.forceDarkMode, bgConfig: siteConfig.background}}>
 			// Force dark mode if configured
 			if (forceDarkMode) {
 				document.documentElement.classList.add('dark');
@@ -195,6 +178,33 @@ const bannerOffset =
 			let offset = Math.floor(window.innerHeight * (BANNER_HEIGHT_EXTEND / 100));
 			offset = offset - offset % 4;
 			document.documentElement.style.setProperty('--banner-height-extend', `${offset}px`);
+
+			// 随机选择背景图
+			let selectedBg, selectedBrightness = 1;
+			const bgSrc = bgConfig.src;
+			
+			if (Array.isArray(bgSrc)) {
+				const randomIndex = Math.floor(Math.random() * bgSrc.length);
+				if (typeof bgSrc[randomIndex] === 'object') {
+					selectedBg = bgSrc[randomIndex].src;
+					selectedBrightness = bgSrc[randomIndex].brightness || 1;
+				} else {
+					selectedBg = bgSrc[randomIndex];
+					selectedBrightness = 1;
+				}
+			} else if (typeof bgSrc === 'object') {
+				selectedBg = bgSrc.src;
+				selectedBrightness = bgSrc.brightness || 1;
+			} else {
+				selectedBg = bgSrc;
+				selectedBrightness = 1;
+			}
+
+			// 设置背景图和亮度
+			if (selectedBg && bgConfig.enable) {
+				document.documentElement.style.setProperty('--bg-url', `url(${selectedBg})`);
+				document.documentElement.style.setProperty('--bg-brightness', selectedBrightness.toString());
+			}
 
 			// Background image loading detection with mobile support and fallback
 			const bgUrl = getComputedStyle(document.documentElement).getPropertyValue('--bg-url').trim();
@@ -242,14 +252,14 @@ const bannerOffset =
 		<style define:vars={{
 			configHue,
 			'page-width': `${PAGE_WIDTH}rem`,
-			'bg-url': randomBgSrc ? `url(${randomBgSrc})` : 'none',
+			'bg-url': 'none', // 客户端动态设置
 			'bg-enable': siteConfig.background.enable ? '1' : '0',
 			'bg-position': siteConfig.background.position || 'center',
 			'bg-size': siteConfig.background.size || 'cover',
 			'bg-repeat': siteConfig.background.repeat || 'no-repeat',
 			'bg-attachment': siteConfig.background.attachment || 'fixed',
 			'bg-opacity': (siteConfig.background.opacity || 0.3).toString(),
-			'bg-brightness': randomBgBrightness.toString()
+			'bg-brightness': '1' // 客户端动态设置
 		}}>
 			:root {
 				--bg-url: var(--bg-url);
