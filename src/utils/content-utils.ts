@@ -45,10 +45,16 @@ export async function getTagList(): Promise<Tag[]> {
 		});
 	});
 
-	// sort tags
-	const keys: string[] = Object.keys(countMap).sort((a, b) => {
-		return a.toLowerCase().localeCompare(b.toLowerCase());
-	});
+	// sort tags by count (descending) and then by name (ascending)
+	const sortedTags = Object.entries(countMap)
+		.sort((a, b) => {
+			// 先按出现次数降序排序
+			const countDiff = b[1] - a[1];
+			if (countDiff !== 0) return countDiff;
+			// 出现次数相同时按名称字母顺序排序
+			return a[0].toLowerCase().localeCompare(b[0].toLowerCase());
+		})
+		.map(([name, count]) => ({ name, count }));
 
-	return keys.map((key) => ({ name: key, count: countMap[key] }));
+	return sortedTags;
 }
